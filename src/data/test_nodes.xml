@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<network>
+<name>test</name>
+<node>
+<name>Test Node</name>
+<notes></notes>
+<mac>00:12:CF:A4:12:34</mac>
+<ip>5.164.18.52</ip>
+<lat>-40.223664597191636</lat>
+<lng>175.56516207141112</lng>
+</node>
+</network>
