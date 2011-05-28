@@ -47,6 +47,13 @@ else {$connectivity = "intranet";}
 
 $tracking = str_replace('"', '\"', $_POST['tracking']);
 
+if ($_POST['rootdashboard']) {
+	$rootdashboard = 1;
+} else {
+	$rootdashboard = 0;
+}
+
+
 $fc = "<?php
 \$brand = \"" . $_POST['brand'] . "\";	// Brand name to use in error messages, and in emails
 \$sn = \"" . $_POST['sn'] . "\";	// The Internet domain name of the server
@@ -61,6 +68,8 @@ $fc = "<?php
 \$recaptcha_privatekey = \"" . $_POST['recaptcha_privatekey'] . "\";	// Private key for reCAPTCHA (Keep this safe!)
 
 \$tracker = \"" . $tracking . "\";	// Enables the ability to track your web users
+
+\$rootdashboard = " . $rootdashboard . ";          // If set to 1, store and forward checkings will not work
 
 require(\"init.php\");
 ?>";
@@ -119,7 +128,12 @@ header("Location: ./?setupcomplete=true");
 		<td>eMail From</td>
 		<td><input type=\"text\" name=\"email\" value=\"\" /></td>
 		</tr>
-		
+	
+		<tr>
+		<td>Root Dashboard (disable store and forward)</td>
+		<td><input type=\"checkbox\" name=\"rootdashboard\" value=\"1\" /></td>
+		</tr>
+
 		<tr>
 		<td>Super Password</td>
 		<td><input type=\"password\" name=\"password\" value=\"\" /></td>

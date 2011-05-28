@@ -119,6 +119,7 @@ $fc = "<?xml version=\"1.0\" ?>
 <enable_custom_firmware>" . $enable_custom_firmware . "</enable_custom_firmware>
 <editmode>" . $_POST['editmode'] . "</editmode>
 <forwardcheck>0</forwardcheck>
+<storeandforward></storeandforward>
 <location>" . $lat . "," . $lng . "</location>
 
 <firewall>

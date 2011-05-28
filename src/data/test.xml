@@ -8,6 +8,7 @@
 <enable_custom_firmware>0</enable_custom_firmware>
 <editmode>advanced</editmode>
 <forwardcheck>0</forwardcheck>
+<storeandforward></storeandforward>
 <location>-40,175</location>
 
 <firewall>

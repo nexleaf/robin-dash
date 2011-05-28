@@ -6,3 +6,19 @@ Current fork of robin-dash 0.7b6, available here: http://code.google.com/p/robin
 Robin-mesh available here: http://www.robin-mesh.net/
 
 
+Changes:
+
+  - Store and forward checking helps when you are trying to sync up an dashboard
+    deployed 'in field' that my have a poor+flaky connection to the real main
+    dashboard. It makes the dual checkin work to your own secondary dashboard
+    asynchronously and reliably.    
+
+  - Added store and forward checkins. All checkins will be stored to a file.
+    You must add the resources/scripts/storeandforwardcheckin.py to cron with
+    two parameters. The first is the path to the settings file, the second is
+    the network name.
+
+  - Added root dashboard setting. Ensures that root dashboard will not
+    try to store and forward.
+ 
+

@@ -113,6 +113,8 @@ $fc = str_replace("<editmode>" . $xmlp->robindash->editmode . "</editmode>", "<e
 $fc = str_replace("<enable_gmt_offset>" . $xmlp->management->enable_gmt_offset . "</enable_gmt_offset>", "<enable_gmt_offset>" . $_POST['timezone'] . "</enable_gmt_offset>", $fc);
 $fc = str_replace("<enable_country_code>" . $xmlp->management->enable_country_code . "</enable_country_code>", "<enable_country_code>" . $_POST['enable_country_code'] . "</enable_country_code>", $fc);
 $fc = str_replace("<forwardcheck>" . $xmlp->robindash->forwardcheck . "</forwardcheck>", "<forwardcheck>" . $forwardcheck . "</forwardcheck>", $fc);
+$fc = str_replace("<storeandforward>" . $xmlp->robindash->storeandforward . "</storeandforward>", "<storeandforward>" . $_POST['storeandforward'] . "</storeandforward>", $fc);
+
 
 if(strlen($xmlp->robindash->location) > 0 && $_POST['location'] == "Already Set") {echo "";}
 else if(strlen($xmlp->robindash->location) > 0 && isset($_POST['location'])) {
@@ -131,7 +133,7 @@ else if(isset($_POST['location'])) {
 	$lng = $result->result->geometry->location->lng;
 	
 	$location = $lat . "," . $lng;
-	$fc = str_replace("<forwardcheck>" . $xmlp->robindash->forwardcheck . "</forwardcheck>", "<forwardcheck>" . $xmlp->robindash->forwardcheck . "</forwardcheck>\n<location>" . $location . "</location>", $fc);
+	$fc = str_replace("<storeandforward>" . $xmlp->robindash->forwardcheck . "</storeandforward>", "<storeandforward>" . $xmlp->robindash->forwardcheck . "</storeandforward>\n<location>" . $location . "</location>", $fc);
 }
 else {echo "";}
 
@@ -948,7 +950,15 @@ else {*/echo "<br>";//}
 		<td id=\"data\"><input type=\"checkbox\" name=\"forwardcheck\""; if($xmlp->robindash->forwardcheck == "1") {echo " checked";} echo "></td>
 		<td id=\"desc\">Makes your nodes also checkin to the open-mesh.com dashboard.</td>
 		</tr>
-		
+
+		<tr>
+			<td id=\"name\">Store and Forward Checkin</td>
+			<td id=\"data\">
+				<input type=\"text\" name=\"storeandforward\" value=\"" . $xmlp->robindash->storeandforward . "\"></td>
+			</td>
+			<td id=\"desc\">Stores the checking values. Setup cron script to forward to root dashboard.</td>
+		</tr>
+	
 		<tr><td colspan=\"3\"><hr></td></tr>
 		
 		<tr>
