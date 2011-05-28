@@ -62,7 +62,7 @@ foreach($robin_vars as $key => $value) {
 	$string .= $key . "=" . $_GET[$key] . "&\n";
 }
 
-array_unshift($robin_vars, date("D M j G:i:s T Y"));
+array_unshift($robin_vars, date("YmdHisT"));
 $status_string = implode(",",$robin_vars);
 fwrite($fh, $status_string . "\n");
 fclose($fh);
@@ -78,18 +78,18 @@ fclose($fj);
 
 // Save node time stats
 $fk = fopen($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['mac']) . ".date.txt", 'w') or die("# Cant write node statistics");
-fwrite($fk, date(d) . date(m) . date(y) . date(i) . date(H) . date(a));
+fwrite($fk, date("YmdHisT"));
 fclose($fk);
 
 // Save node performance stats over time
-if(is_dir($dir . "data/stats/" . $networkname . "/" . date(d) . "-" . date(m))) {echo "";}
-else {mkdir($dir . "data/stats/" . $networkname . "/" . date(d) . "-" . date(m));}
+if(is_dir($dir . "data/stats/" . $networkname . "/" . date('Ymd') )) {echo "";}
+else {mkdir($dir . "data/stats/" . $networkname . "/" . date('Ymd'));}
 
-$fk = fopen($dir . "data/stats/" . $networkname . "/" . date(d) . "-" . date(m) . "/" . date(i) . date(G) . "-" . base64_encode($_GET['mac']) . ".usage.txt", 'w') or die("# Cant write node statistics");
+$fk = fopen($dir . "data/stats/" . $networkname . "/" . date('Ymd') . "/" . date('Hi') . "-" . base64_encode($_GET['mac']) . ".usage.txt", 'w') or die("# Cant write node statistics");
 fwrite($fk, $_GET['users'] . "&" . urlencode($_GET['top_users']) . "&" . $_GET['sta_mac'] . "&" . $_GET['sta_ip'] . "&" . $_GET['sta_hostname'] . "&" . $_GET['sta_rssi'] . "&" . $_GET['sta_dbm']);
 fclose($fk);
 
-$fk = fopen($dir . "data/stats/" . $networkname . "/" . date(d) . "-" . date(m) . "/" . base64_encode($_GET['mac']) . ".txt", 'w') or die("# Cant write node statistics");
+$fk = fopen($dir . "data/stats/" . $networkname . "/" . date('Ymd') . "/" . base64_encode($_GET['mac']) . ".txt", 'w') or die("# Cant write node statistics");
 fwrite($fk, $_GET['NTR'] . "&" . $_GET['nbs'] . "&" . $_GET['rssi'] . "&" . $_GET['RTT']);
 fclose($fk);
 
