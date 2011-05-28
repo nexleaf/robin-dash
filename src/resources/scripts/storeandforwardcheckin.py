@@ -51,9 +51,9 @@ nsets = ET.parse(fd)
 fd.close()
 
 forwardurl = ""
-for e in nsets.getiterator:
-	if a.tag == 'storeandforward':
-		forwardurl = a.text
+for e in nsets.getiterator():
+	if e.tag == 'storeandforward':
+		forwardurl = e.text
 
 if forwardurl == "":
 	print "No foward url, stopping"
