@@ -70,7 +70,7 @@ if ($robin_vars['datetime'] == '') {
 	array_unshift($robin_vars, $robin_vars['datetime']);
 }
 
-$checkindatefull = create_date_from_format("YmdHisT", $robin_vars['datetime']);
+$checkindatefull = date_create_from_format("YmdHisT", $robin_vars['datetime']);
 $checkindate = int($checkindatefull->format('U'));
 
 $status_string = implode(",",$robin_vars);
