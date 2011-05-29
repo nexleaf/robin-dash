@@ -78,6 +78,9 @@ fwrite($fh, $status_string . "\n");
 fclose($fh);
 
 if ($xmlp->robindash->storeandforward != "" && $rootdashboard == 0) {
+	if (!is_dir($dir . "data/stats/" . $networkname . "/forward" )) {
+		mkdir($dir . "data/stats/" . $networkname . "/forward");
+	}
 	$forfile = $dir . "data/forward/" . $networkname . "_" . date("YmdHis_u") . ".up";
 	$fh = fopen($forfile, 'w') or die("# Cant write to store and forward file");
 	fwrite($fh, $_SERVER['QUERY_STRING'] . '&datetime=' . urlencode($robin_vars['datetime']) . "\n");
