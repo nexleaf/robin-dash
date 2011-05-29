@@ -9,8 +9,7 @@ else {
 	die("# We need to setup the server first");
 }
 
-
-function auth_user() {
+function auth_user($xmlp) {
 	if(isset($_SESSION['user']) && isset($_SESSION['pass']) && file_exists($dir . "data/" . $_SESSION['user'] . ".xml")) {
 		// $xmlp = simplexml_load_file($dir . "data/" . $_SESSION['user'] . ".xml");
 	        if($_SESSION['pass'] != $xmlp->robindash->password) {
@@ -23,17 +22,14 @@ function auth_user() {
 function verify_localhost() {
 	$ip = $_SERVER['REMOTE_ADDR'];
 	//print $ip;
-	if ($ip != "localhost" || $ip != "127.0.0.1") {
-		die("Sync only allowed from localhost!");
+	if ($ip != "localhost" || $ip != "127.0.0.1" || $ip != "127.0.1.1") {
+	//	die("Sync only allowed from localhost!");
 	}
 }
 
 function show_config() {
-
 	$fc = file_get_contents($dir . "data/" . $_SESSION['user'] . ".xml");	
-
 	print $fc;
-
 }
 
 function store_config() {
@@ -52,35 +48,43 @@ function store_config() {
 }
 
 
-function do_login() {
+function do_login($xmlp, $network) {
 
+	global $sn;
+	global $wdir;
+	
 	// Figure out the login url
 	$loginurl = "";
-	if (stripos($xmlp->robindash->configsync, "https") != 0) {
-		$loginurl = "https://" . $sn . $wdir; 
-	} else {
+	if (stripos($xmlp->robindash->configsync, "https") === false) {
 		$loginurl = "http://" . $sn . $wdir; 
+	} else {
+		$loginurl = "https://" . $sn . $wdir; 
+	}
+
+	if (!isset($_GET['usepass'])) {
+		die("# Must set usepass GET parameter");
 	}
 
 	// Do the login
 	$post_data = array();
-	$post_data['user'] = $_SESSION['user'];
-	$post_data['pass'] = $xmlp->robindash->password;
+	$post_data['user'] = $network;
+	$post_data['pass'] = $_GET['usepass'];
 	
-	$ckfile = $dir . "data/" . $_SESSION['user'] . "_cookies.txt"
+	$ckfile = $dir . "data/" . $network . "_cookies.txt";
 	$ch = curl_init($loginurl);
 	
-	curl_setopt($ch, CURLOPT_POST, 1 );
+	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 	curl_setopt($ch, CURLOPT_COOKIEFILE, $ckfile);
 	curl_setopt($ch, CURLOPT_COOKIEJAR, $ckfile);
-	curl_setopt($ch, CURLOPT_HEADER,1);
+	curl_setopt($ch, CURLOPT_COOKIESESSION, 1);
+	curl_setopt($ch, CURLOPT_HEADER, 1);
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
 	$postResult = curl_exec($ch);
 	if (curl_errno($ch)) {
-		die("# unable to login!");
+		die("# unable to login! " . curl_errno($ch));
 	}
 	curl_close($ch);
 	
@@ -88,31 +92,30 @@ function do_login() {
 
 
 
-function pull_config() {
+function pull_config($xmlp, $network) {
+
+	do_login($xmlp, $network);
 
 	// Figre out server url for checkin
 	$serverurl = $xmlp->robindash->configsync;
-	if (stripos($xmlp->robindash->configsync, "http") != 0) {
+	if (stripos($xmlp->robindash->configsync, "http") === false) {
 		$serverurl = "http://" . $xmlp->robindash->configsync . '/sync-config.php?action=show';
 	}
 
 	// Get the config
-	$post_data = array();
-	$post_data['user'] = $_SESSION['user'];
-	$post_data['pass'] = $xmlp->robindash->password;
-	
-	$ckfile = $dir . "data/" . $_SESSION['user'] . "_cookies.txt"
-	$ch = curl_init($loginurl);
+	$ckfile = $dir . "data/" . $network . "_cookies.txt";
+
+	$ch = curl_init($serverurl);
 	
 	curl_setopt($ch, CURLOPT_COOKIEFILE, $ckfile);
 	curl_setopt($ch, CURLOPT_COOKIEJAR, $ckfile);
-	curl_setopt($ch, CURLOPT_HEADER,1);
+	// curl_setopt($ch, CURLOPT_HEADER, 1);
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
 	$getResult = curl_exec($ch);
 	if (curl_errno($ch)) {
-		die("# unable to get data!");
+		die("# unable to get data! " . curl_errno($ch));
 	}
 	curl_close($ch);
 
@@ -120,27 +123,33 @@ function pull_config() {
 
 }
 
-function push_config() {
+function push_config($xmlp) {
 
 }
 
 
 // Verify that we are configured for remote sync and load the xml for everyone
-$xmlp = simplexml_load_file($dir . "data/" . $_SESSION['user'] . ".xml");	
+$network = "";
+if (isset($_GET['network'])) {
+	$network = $_GET['network'];
+} else {
+	$network = $_SESSION['user'];
+}
+$xmlp = simplexml_load_file($dir . "data/" . $network . ".xml");	
 
 switch ($_GET["action"]) {
 
 	case "show":
-		auth_user();
+		auth_user($xmlp);
 		show_config();
 		break;
 	case "store":
-		auth_user();
+		auth_user($xmlp);
 		store_config();
 		break;
 	case "dosync":
-		verify_localhost();
-		$remoteconfig = pull_config();
+		verify_localhost($xmlp);
+		$remoteconfig = pull_config($xmlp, $network);
 		print $remoteconfig;
 		/* if remote new, sync local, if local new push */
 		break;
