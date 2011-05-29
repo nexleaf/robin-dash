@@ -96,10 +96,10 @@ else if(isset($_GET['action']) && $_GET['action'] == "clients" && isset($_GET['m
 	$kbdown = array();
 	$kbup = array();
 
-	if($handle = opendir($dir . "data/stats/" . $networkname . "/" . date(d) . "-" . date(m) . "/")) {
+	if($handle = opendir($dir . "data/stats/" . $networkname . "/" . date('Ymd') . "/")) {
 		while(false !== ($file = readdir($handle))) {
 			if($file != "." && $file != ".." && strpos($file, '.usage.') !==FALSE) {
-				$fc = file_get_contents($dir . "data/stats/" . $networkname . "/" . date(d) . "-" . date(m) . "/" . $file);
+				$fc = file_get_contents($dir . "data/stats/" . $networkname . "/" . date('Ymd') . "/" . $file);
 				$fctwo = explode("&", $fc);
 				$user = explode("+", urldecode($fctwo[1]));
 				
@@ -310,11 +310,12 @@ exit;
 
 
 else if(isset($_GET['action']) && $_GET['action'] == "node-info" && isset($_GET['mac']) && file_exists($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['mac']) . ".ip.txt")) {
-if(isset($_GET['day'])) {$day = $_GET['day'];} else {$day = date(d);}
-if(isset($_GET['mon'])) {$mon = $_GET['mon'];} else {$mon = date(m);}
+if(isset($_GET['day'])) {$day = $_GET['day'];} else {$day = date('d');}
+if(isset($_GET['mon'])) {$mon = $_GET['mon'];} else {$mon = date('m');}
+if(isset($_GET['year'])) {$year = $_GET['year'];} else {$year = date('Y');}
 
 $xmlp = simplexml_load_file($dir . "data/" . $networkname . "_nodes.xml");
-$sdir = $dir . "data/stats/" . $networkname . "/" . $day . "-" . $mon . "/";
+$sdir = $dir . "data/stats/" . $networkname . "/" . $year . $mon . $day . "/";
 
 foreach($xmlp->node as $node) {
 	if($node->mac == $_GET['mac']) {$name = $node->name;}
@@ -328,7 +329,7 @@ $mac = $_GET['mac'];
 $ip = str_replace(":", "", $_GET['mac']);
 $ip = "5." . hexdec(substr($ip, -6, 2)) . "." . hexdec(substr($ip, -4, 2)) . "." . hexdec(substr($ip, -2));
 
-if(file_exists($dir . "data/stats/" . $networkname . "/" . $day . "-" . $mon . "/" . base64_encode($_GET['mac']) . ".txt")) {$fc = file_get_contents($file);}
+if(file_exists($dir . "data/stats/" . $networkname . "/" . $year . $mon . $day . "/" . base64_encode($_GET['mac']) . ".txt")) {$fc = file_get_contents($file);}
 else {die("<h1>This node has not checked in yet!</h1>");}
 
 $data = explode("&", $fc);
@@ -342,7 +343,7 @@ else {$color = "green";}
 
 $online = array(0=>0,1=>0,2=>0,3=>0,4=>0,5=>0,6=>0,7=>0,8=>0,9=>0,10=>0,11=>0,12=>0,13=>0,14=>0,15=>0,16=>0,17=>0,18=>0,19=>0,20=>0,21=>0,22=>0,23=>0,24=>0);
 
-if($handle = opendir($dir . "data/stats/" . $networkname . "/" . $day . "-" . $mon . "/")) {
+if($handle = opendir($dir . "data/stats/" . $networkname . "/" . $year . $mon . $day . "/")) {
 	while(false !== ($file = readdir($handle))) {
 		if($file != "." && $file != ".." && strpos($file, '.usage.') !==FALSE && strpos($file, base64_encode($_GET['mac'])) !==FALSE) {
 			if(strpos(substr($file, 2, 2), '-') !==FALSE) {$hour = substr($file, 2, 1);}
@@ -400,18 +401,10 @@ $data = implode(",", $online);
 						<?php
 						if(file_exists($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['mac']) . ".date.txt")) {$fc = file_get_contents($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['mac']) . ".date.txt");}
 						else {echo "Node has not checked in yet.";}
-
-						$day = substr($fc, 0, 2);
-						$mon = substr($fc, 2, 2);
-						$yer = substr($fc, 4, 2);
-
-						$min = substr($fc, 6, 2);
-						$anp = substr($fc, 10, 2);
-						$hor = substr($fc, 8, 2);
+						$fulldatetime = date_create_from_format('YmdHisT', $fc);
 						
-						if($hor > 12) {$hor = $hor - 12;}
-						
-						echo $hor . ":" . $min . " " . $anp . "&nbsp;&nbsp;" . $day . "/" . $mon . "/20" . $yer;
+						echo $fulldatetime->format('Y/m/d H:i e');
+						// echo $fulldatetime->format('g:i a e d/m/Y'); 	
 						?>
 					</td>
 				</tr>
@@ -645,13 +638,15 @@ foreach($sxml->node as $item) {
 	if(file_exists($dir . "data/stats/" . $networkname . "/" . base64_encode($item->mac) . ".date.txt")) {
 		$ts = file_get_contents($dir . "data/stats/" . $networkname . "/" . base64_encode($item->mac) . ".date.txt");
 
-		$day = substr($ts, 0, 2);
-		$mon = substr($ts, 2, 2);
-		$hor = substr($ts, 8, 2);
+		$fulldatetime = date_create_from_format('YmdHisT', $ts);
+		$nowdatetime = date_create();
+		$datediff = $nowdatetime->diff($fulldatetime);
 
-		if($day == date(d) && $mon == date(m) && $hor == date(H)) {$status = "online";}
-		else if($day == date(d) && $mon == date(m) && $hor == date(H) - 1 && date(i) < 6) {$status = "online";}
-		else {$status = "offline";}
+		if ($datediff->y == 0 && $datediff->m == 0 && $datediff->d == 0 && $datediff->h == 0 && $datediff->i <= 59) {
+			$status = "online";
+		} else {
+			$status = "offline";
+		}
 		
 		if(file_exists($dir . "data/role/" . base64_encode($item->mac) . ".txt")) {
 			if(file_get_contents($dir . "data/role/" . base64_encode($item->mac) . ".txt") == "G") {$role = "g";}
@@ -772,13 +767,12 @@ exit;
 			$kbup = array();
 			$done = array();
 			
-			$day = date(d);
-			$month = date(m);
+			$datedir = date('Ymd');
 			
-			if($handle = opendir($dir . "data/stats/" . $networkname . "/" . $day . "-" . $month . "/")) {
+			if($handle = opendir($dir . "data/stats/" . $networkname . "/" . $datedir . "/")) {
 				while(false !== ($file = readdir($handle))) {
 					if($file != "." && $file != ".." && strpos($file, '.usage.') !==FALSE) {
-						$fc = file_get_contents($dir . "data/stats/" . $networkname . "/" . $day . "-" . $month . "/" . $file);
+						$fc = file_get_contents($dir . "data/stats/" . $networkname . "/" . $datedir . "/" . $file);
 						$fctwo = explode("&", $fc);
 						$user = explode("+", urldecode($fctwo[1]));
 						
@@ -895,13 +889,9 @@ exit;
 			sort($array);
 			$ts = file_get_contents($dir . "data/stats/" . $networkname . "/" . base64_encode($node->mac) . ".date.txt");
 
-			$day = substr($ts, 0, 2);
-			$mon = substr($ts, 2, 2);
-			$yer = substr($ts, 4, 2);
-
-			$min = substr($ts, 6, 2);
-			$hor = substr($ts, 8, 2);
-			$anp = substr($ts, 10, 2);
+			$fulldatetime = date_create_from_format('YmdHisT', $ts);
+			$nowdatetime = date_create();
+			$datediff = $nowdatetime->diff($fulldatetime);
 
 			foreach($array as $item) {
 				if(strpos($item, 'sta_') !==FALSE) {echo "";}
@@ -947,20 +937,21 @@ exit;
 			if($status == "G") {$statusid = "gateway";$hops = "0";$ntr = "100 MB/s";}
 			else {$statusid = "repeater";}
 
-			if($day == date(d) && $mon == date(m) && $hor == date(H)) {echo "";}
-			else if($day == date(d) && $mon == date(m) && $hor == date(H) - 1 && date(i) < 6) {echo "";}
-			else {$status = "O";$statusid = "offline";}
+			if ($datediff->y != 0 || $datediff->m != 0 && $datediff->d != 0 && $datediff->h >= 1) {
+				$status = "O";
+				$statusid = "offline";
+			}
 
 			if($statusid == "offline") {
-				if($hor > 12) {$hor = $hor - 12;}
 				
-				$uptime = "<font color=\"red\"><b>Down!</b></font><br />" . $day . "/" . $mon . "/" . $yer . "<br />" . $hor . ":" . $min . " " . $anp;
+				//$uptime = "<font color=\"red\"><b>Down!</b></font><br />" . $fulldatetime->format('d/m/Y') . "<br />" . $fulldatetime->format('g:i a e');
+				$uptime = "<font color=\"red\"><b>Down!</b></font><br />" . $fulldatetime->format('Y/m/d') . "<br />" . $fulldatetime->format('H:i e');
 			}
 			
 			echo "<tr style=\"border:1px gray solid;font-size:80%;\">";
 			echo "<td class=\"" . $statusid ."\">" . $status . "</td>";
 
-			if(file_exists($dir . "data/stats/" . $networkname . "/" . date(d) . "-" . date(m) . "/" . base64_encode($mac) . ".txt")) {
+			if(file_exists($dir . "data/stats/" . $networkname . "/" . date('Ymd') . "/" . base64_encode($mac) . ".txt")) {
 				if($statusid == "offline") {echo "<td style=\"text-align:left;padding:10px;\">" . $name . "</td>";}
 				else {echo "<td style=\"text-align:left;padding:10px;\"><a href=\"#\" onclick=\"window.open('" . $wdir . "overview.php?id=" . $networkname . "&action=node-info&mac=" . $mac . "', '" . rand(1, 9999999) . "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=1,width=630,height=512');\">" . $name . "</a></td>";}
 			}

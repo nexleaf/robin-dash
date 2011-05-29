@@ -94,24 +94,19 @@ else {
 
 // Timezone functions
 function setTimezoneByOffset($offset) {
-	$testTimestamp = time();
-	date_default_timezone_set('UTC');
-	$testLocaltime = localtime($testTimestamp,true);
-	$testHour = $testLocaltime['tm_hour'];
+	$offset = $offset*60*60;
 	$abbrarray = timezone_abbreviations_list();
-	
-    foreach($abbrarray as $abbr) {
-			foreach($abbr as $city) {
-                date_default_timezone_set($city['timezone_id']);
-                $testLocaltime = localtime($testTimestamp,true);
-                $hour = $testLocaltime['tm_hour'];
-                $testOffset = $hour - $testHour;
-
-                if($testOffset == $offset) {
-					return true;
-				}
+	//echo $abbr."<br>";
+	foreach ($abbrarray as $abbr) {
+		foreach ($abbr as $city) {
+			//echo $city['offset']." $offset<br>";
+			if ($city['offset'] == $offset) { // remember to multiply $offset by -1 if you're getting it from js
+				date_default_timezone_set($city['timezone_id']);
+				return true;
+			}
 		}
 	}
+	date_default_timezone_set("ust");
 	return false;
 }
-?>
+

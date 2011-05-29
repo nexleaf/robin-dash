@@ -63,20 +63,21 @@ foreach($robin_vars as $key => $value) {
 }
 
 if ($robin_vars['datetime'] == '') {
-	$thedate = date("D M j G:i:s T Y");
+	$thedate = date("YmdHisT");
 	array_unshift($robin_vars, $thedate);
 	$robin_vars['datetime'] = $thedate;
 } else {
 	array_unshift($robin_vars, $robin_vars['datetime']);
 }
 
-$checkindate = strtotime($robin_vars['datetime']);
+$checkindatefull = create_date_from_format("YmdHisT", $robin_vars['datetime']);
+$checkindate = int($checkindatefull->format('U'));
 
 $status_string = implode(",",$robin_vars);
 fwrite($fh, $status_string . "\n");
 fclose($fh);
 
-if ($xmlp->robindash->storeandforward != "" && $rootdashboard != 1) {
+if ($xmlp->robindash->storeandforward != "" && $rootdashboard == 0) {
 	$forfile = $dir . "data/forward/" . $networkname . "_" . date("YmdHis_u") . ".up";
 	$fh = fopen($forfile, 'w') or die("# Cant write to store and forward file");
 	fwrite($fh, $_SERVER['QUERY_STRING'] . '&datetime=' . urlencode($robin_vars['datetime']) . "\n");
@@ -97,27 +98,32 @@ $fc = "";
 if(file_exists($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['mac']) . ".date.txt")) {$fc = file_get_contents($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['mac']) . ".date.txt");}
 $update_checkin_date = 1;
 if ($fc != "") {
-	$dt = date_create_from_format('dmyiHa', $fc);
-	$comptime = $dt->format('U');
+	$dt = date_create_from_format('YmdHisT', $fc);
+	$comptime = int($dt->format('U'));
 	if ($comptime > $checkindate) {
 		$update_checkin_date = 0;
 	}
 }
 if ($update_checkin_date == 1) {
 	$fk = fopen($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['mac']) . ".date.txt", 'w') or die("# Cant write node statistics");
-	fwrite($fk, date('dmyiHa', $checkindate)); // date(d) . date(m) . date(y) . date(i) . date(H) . date(a));
+	fwrite($fk, date('YmdHisT', $checkindate)); // date(d) . date(m) . date(y) . date(i) . date(H) . date(a));
 	fclose($fk);
 }
 
-// Save node performance stats over time
-if(is_dir($dir . "data/stats/" . $networkname . "/" . date("d-m", $checkindate))) {echo "";}
-else {mkdir($dir . "data/stats/" . $networkname . "/" . date("d-m", $checkindate));}
+// Save node time stats
+$fk = fopen($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['mac']) . ".date.txt", 'w') or die("# Cant write node statistics");
+fwrite($fk, date("YmdHisT"));
+fclose($fk);
 
-$fk = fopen($dir . "data/stats/" . $networkname . "/" . date("d-m/iG-", $checkindate) . base64_encode($_GET['mac']) . ".usage.txt", 'w') or die("# Cant write node statistics");
+// Save node performance stats over time
+if(is_dir($dir . "data/stats/" . $networkname . "/" . date('Ymd', $checkindate) )) {echo "";}
+else {mkdir($dir . "data/stats/" . $networkname . "/" . date('Ymd', $checkindate));}
+
+$fk = fopen($dir . "data/stats/" . $networkname . "/" . date('Ymd', $checkindate) . "/" . date('Hi', $checkindate) . "-" . base64_encode($_GET['mac']) . ".usage.txt", 'w') or die("# Cant write node statistics");
 fwrite($fk, $_GET['users'] . "&" . urlencode($_GET['top_users']) . "&" . $_GET['sta_mac'] . "&" . $_GET['sta_ip'] . "&" . $_GET['sta_hostname'] . "&" . $_GET['sta_rssi'] . "&" . $_GET['sta_dbm']);
 fclose($fk);
 
-$fk = fopen($dir . "data/stats/" . $networkname . "/" . date("d-m", $checkindate) . "/" . base64_encode($_GET['mac']) . ".txt", 'w') or die("# Cant write node statistics");
+$fk = fopen($dir . "data/stats/" . $networkname . "/" . date('Ymd', $checkindate) . "/" . base64_encode($_GET['mac']) . ".txt", 'w') or die("# Cant write node statistics");
 fwrite($fk, $_GET['NTR'] . "&" . $_GET['nbs'] . "&" . $_GET['rssi'] . "&" . $_GET['RTT']);
 fclose($fk);
 
