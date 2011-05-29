@@ -9,6 +9,7 @@
 <editmode>advanced</editmode>
 <forwardcheck>0</forwardcheck>
 <location>-40,175</location>
+<configsync></configsync>
 
 <firewall>
 <http_authenticated>1</http_authenticated>

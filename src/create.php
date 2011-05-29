@@ -120,6 +120,7 @@ $fc = "<?xml version=\"1.0\" ?>
 <editmode>" . $_POST['editmode'] . "</editmode>
 <forwardcheck>0</forwardcheck>
 <location>" . $lat . "," . $lng . "</location>
+<configsync></configsync>
 
 <firewall>
 <http_authenticated>1</http_authenticated>
