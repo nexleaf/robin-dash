@@ -71,7 +71,7 @@ if ($robin_vars['datetime'] == '') {
 }
 
 $checkindatefull = date_create_from_format("YmdHisT", $robin_vars['datetime']);
-$checkindate = int($checkindatefull->format('U'));
+$checkindate = intval($checkindatefull->format('U'));
 
 $status_string = implode(",",$robin_vars);
 fwrite($fh, $status_string . "\n");
@@ -99,7 +99,7 @@ if(file_exists($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['
 $update_checkin_date = 1;
 if ($fc != "") {
 	$dt = date_create_from_format('YmdHisT', $fc);
-	$comptime = int($dt->format('U'));
+	$comptime = intval($dt->format('U'));
 	if ($comptime > $checkindate) {
 		$update_checkin_date = 0;
 	}
