@@ -30,31 +30,33 @@ function verify_localhost() {
 }
 
 
-function write_configuration($networkname, $config) {
+function write_configuration($network, $config) {
 	global $dir;
 	
 	// save the configuration
-	$fh = fopen($dir . "data/" . $networkname . ".xml", 'w') or die("Can't write to the data file.");
+	$fh = fopen($dir . "data/" . $network . ".xml", 'w') or die("Can't write to the data file.");
 	fwrite($fh, $config);
 	fclose($fh);
 
 	// clear the checkinID
-	$fh = fopen($dir . "data/cid/" . $networkname . ".txt", 'w') or die("Can't write to the data file.");
+	$fh = fopen($dir . "data/cid/" . $network . ".txt", 'w') or die("Can't write to the data file.");
 	fwrite($fh, "-\n");
 	fclose($fh);
 }
 
 
-function show_config() {
-	$fc = file_get_contents($dir . "data/" . $_SESSION['user'] . ".xml");	
+function show_config($network) {
+	$fc = file_get_contents($dir . "data/" . $network . ".xml");	
 	print $fc;
 }
 
 
-function store_config() {
-	$uploadfile = $dir . "data/" . $_SESSION['user'] . ".xml";
+function store_config($network) {
+	$uploadfile = $dir . "data/" . $network . ".xml";
 
 	// TODO: Verify remote file has newer version that local file
+
+	print "Writing " . $_FILES['conffile']['tmp_name'] . " to " . $uploadfile . "\n";
 
 	if (move_uploaded_file($_FILES['conffile']['tmp_name'], $uploadfile)) {
 		echo "File is valid, and was successfully uploaded.\n";
@@ -63,7 +65,7 @@ function store_config() {
 	}
 
 	// clear the checkinID
-	$fh = fopen($dir . "data/cid/" . $_SESSION['user'] . ".txt", 'w') or die("Can't write to the data file.");
+	$fh = fopen($dir . "data/cid/" . $network . ".txt", 'w') or die("Can't write to the data file.");
 	fwrite($fh, "-\n");
 	fclose($fh);
 
@@ -144,6 +146,7 @@ function pull_config($xmlp, $network) {
 
 }
 
+
 function push_config($xmlp, $network) {
 	
 	global $dir;
@@ -156,10 +159,11 @@ function push_config($xmlp, $network) {
 
 	// Do the POST
 	$post_data = array();
-	$post_data['conffile'] = "@" .$dir . "data/" . $networkname . ".xml";
+	$post_data['conffile'] = "@" . $dir . "data/" . $network . ".xml";
 	
 	$ckfile = $dir . "data/" . $network . "_cookies.txt";
-	$ch = curl_init($loginurl);
+
+	$ch = curl_init($serverurl);
 	
 	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
@@ -172,8 +176,13 @@ function push_config($xmlp, $network) {
 
 	$postResult = curl_exec($ch);
 	if (curl_errno($ch)) {
-		die("# unable to upload file! " . curl_errno($ch));
+		print_r($post_data);
+		print "\n";
+		die("# unable to upload file! " . curl_error($ch) . " " . $upfile . "\n");
+
 	}
+	print $postResult;
+	
 	curl_close($ch);
 
 }
@@ -197,11 +206,11 @@ switch ($_GET["action"]) {
 	 */
 	case "show":
 		auth_user($xmlp);
-		show_config();
+		show_config($network);
 		break;
 	case "store":
 		auth_user($xmlp);
-		store_config();
+		store_config($network);
 		break;
 	/**
 	 * This case runs on the remote dashboard. The remote dashboard decides which
