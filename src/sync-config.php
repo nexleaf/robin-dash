@@ -22,10 +22,11 @@ function auth_user($xmlp) {
 
 function verify_localhost() {
 	$ip = $_SERVER['REMOTE_ADDR'];
-	
-	if ($ip != "localhost" || $ip != "127.0.0.1" || $ip != "127.0.1.1") {
+	if ($ip == "localhost" || $ip == "127.0.0.1" || $ip == "127.0.1.1") {
+		/* all good to sync */
+	} else {
 		die("Sync only allowed from localhost!");
-	}
+	}	
 }
 
 
