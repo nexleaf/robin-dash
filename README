@@ -6,3 +6,14 @@ Current fork of robin-dash 0.7b6, available here: http://code.google.com/p/robin
 Robin-mesh available here: http://www.robin-mesh.net/
 
 
+Changes:
+
+  - Configuration syncornization between remote dashboards and the root dashboard.
+
+  - The remote dashboard check the configuration on the root dashboard. They
+    either load the new config or write their new config to the root dashboard.
+
+  - There is a cront script in resources/scripts/configsync.sh that needs to be run
+    on the remote dashboard.
+
+
