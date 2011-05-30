@@ -12,7 +12,6 @@ else {
 
 function auth_user($xmlp) {
 	if(isset($_SESSION['user']) && isset($_SESSION['pass']) && file_exists($dir . "data/" . $_SESSION['user'] . ".xml")) {
-		// $xmlp = simplexml_load_file($dir . "data/" . $_SESSION['user'] . ".xml");
 	        if($_SESSION['pass'] != $xmlp->robindash->password) {
 			print "# Invalid session\n";
 			die("# Invalid session\n");
@@ -23,9 +22,9 @@ function auth_user($xmlp) {
 
 function verify_localhost() {
 	$ip = $_SERVER['REMOTE_ADDR'];
-	//print $ip;
+	
 	if ($ip != "localhost" || $ip != "127.0.0.1" || $ip != "127.0.1.1") {
-	//	die("Sync only allowed from localhost!");
+		die("Sync only allowed from localhost!");
 	}
 }
 
@@ -56,15 +55,11 @@ function show_config($network) {
 	//header('Content-Length: ' . filesize($dir . "data/" . $network . ".xml"));
 	ob_end_clean();
 	flush();
-	// readfile($dir . "data/" . $network . ".xml");
 	$fs = filesize($dir . "data/" . $network . ".xml");
 	$fd = fopen($dir . "data/" . $network . ".xml", 'rb');
 	$fc = fread($fd, $fs);
 	fclose($fd);
 	print $fc;
-
-	//	$fc = file_get_contents($dir . "data/" . $network . ".xml");	
-	//	print $fc;
 }
 
 
@@ -74,16 +69,15 @@ function store_config($network) {
 	// TODO: Verify remote file has newer version that local file
 
 	if (move_uploaded_file($_FILES['conffile']['tmp_name'], $uploadfile)) {
-		echo "File is valid, and was successfully uploaded.\n";
+		# echo "File is valid, and was successfully uploaded.\n";
 	} else {
-		echo "Possible file upload attack!\n";
+		echo "# Error with config sync upload!\n";
 	}
 
 	// clear the checkinID
 	$fh = fopen($dir . "data/cid/" . $network . ".txt", 'w') or die("Can't write to the data file.");
 	fwrite($fh, "-\n");
 	fclose($fh);
-
 }
 
 
@@ -239,6 +233,7 @@ switch ($_GET["action"]) {
 		$remotever = intval($remotexml->robindash->configversion);
 		$localver = intval($xmlp->robindash->configversion);
 		
+		/* if remote new, sync local, if local new push */
 		if ($localver > $remotever) {
 			push_config($xmlp, $network);
 		} else if ($localver < $remotever) {
@@ -246,7 +241,6 @@ switch ($_GET["action"]) {
 		} else {
 			// Same configuration so no changes!
 		}
-		/* if remote new, sync local, if local new push */
 		break;
 	default:
 		print "# invalid action\n";
