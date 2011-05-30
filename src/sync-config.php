@@ -46,8 +46,25 @@ function write_configuration($network, $config) {
 
 
 function show_config($network) {
-	$fc = file_get_contents($dir . "data/" . $network . ".xml");	
+	header('Content-Description: File Transfer');
+	header('Content-Type: text/xml');
+	header('Content-Disposition: attachment; filename='. $network .'.xml');
+	header('Content-Transfer-Encoding: binary');
+	header('Expires: 0');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Pragma: public');
+	//header('Content-Length: ' . filesize($dir . "data/" . $network . ".xml"));
+	ob_end_clean();
+	flush();
+	// readfile($dir . "data/" . $network . ".xml");
+	$fs = filesize($dir . "data/" . $network . ".xml");
+	$fd = fopen($dir . "data/" . $network . ".xml", 'rb');
+	$fc = fread($fd, $fs);
+	fclose($fd);
 	print $fc;
+
+	//	$fc = file_get_contents($dir . "data/" . $network . ".xml");	
+	//	print $fc;
 }
 
 
@@ -55,8 +72,6 @@ function store_config($network) {
 	$uploadfile = $dir . "data/" . $network . ".xml";
 
 	// TODO: Verify remote file has newer version that local file
-
-	print "Writing " . $_FILES['conffile']['tmp_name'] . " to " . $uploadfile . "\n";
 
 	if (move_uploaded_file($_FILES['conffile']['tmp_name'], $uploadfile)) {
 		echo "File is valid, and was successfully uploaded.\n";
@@ -111,7 +126,6 @@ function do_login($xmlp, $network) {
 		die("# unable to login! " . curl_errno($ch));
 	}
 	curl_close($ch);
-	
 }
 
 
@@ -135,15 +149,16 @@ function pull_config($xmlp, $network) {
 	// curl_setopt($ch, CURLOPT_HEADER, 1);
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_BINARYTRANSFER, 1);
+	//curl_setopt($ch, CURLOPT_CRLF, 1);
 
 	$getResult = curl_exec($ch);
 	if (curl_errno($ch)) {
-		die("# unable to get data! " . curl_errno($ch));
+		die("# unable to get data! " . curl_error($ch));
 	}
 	curl_close($ch);
 
 	return $getResult;
-
 }
 
 
@@ -169,22 +184,19 @@ function push_config($xmlp, $network) {
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 	curl_setopt($ch, CURLOPT_COOKIEFILE, $ckfile);
 	curl_setopt($ch, CURLOPT_COOKIEJAR, $ckfile);
-	curl_setopt($ch, CURLOPT_COOKIESESSION, 1);
 	//curl_setopt($ch, CURLOPT_HEADER, 1);
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 
 	$postResult = curl_exec($ch);
+	
 	if (curl_errno($ch)) {
-		print_r($post_data);
-		print "\n";
 		die("# unable to upload file! " . curl_error($ch) . " " . $upfile . "\n");
 
 	}
 	print $postResult;
 	
 	curl_close($ch);
-
 }
 
 
@@ -226,7 +238,7 @@ switch ($_GET["action"]) {
 
 		$remotever = intval($remotexml->robindash->configversion);
 		$localver = intval($xmlp->robindash->configversion);
-
+		
 		if ($localver > $remotever) {
 			push_config($xmlp, $network);
 		} else if ($localver < $remotever) {
