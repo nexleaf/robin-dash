@@ -121,6 +121,9 @@ $fc = "<?xml version=\"1.0\" ?>
 <forwardcheck>0</forwardcheck>
 <storeandforward></storeandforward>
 <location>" . $lat . "," . $lng . "</location>
+<configsync></configsync>
+<configversion>0</configversion>
+<configdate>". date("YmdHisT") ."</configdate>
 
 <firewall>
 <http_authenticated>1</http_authenticated>
