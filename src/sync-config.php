@@ -9,6 +9,7 @@ else {
 	die("# We need to setup the server first");
 }
 
+
 function auth_user($xmlp) {
 	if(isset($_SESSION['user']) && isset($_SESSION['pass']) && file_exists($dir . "data/" . $_SESSION['user'] . ".xml")) {
 		// $xmlp = simplexml_load_file($dir . "data/" . $_SESSION['user'] . ".xml");
@@ -19,6 +20,7 @@ function auth_user($xmlp) {
 	}
 }
 
+
 function verify_localhost() {
 	$ip = $_SERVER['REMOTE_ADDR'];
 	//print $ip;
@@ -27,14 +29,29 @@ function verify_localhost() {
 	}
 }
 
+
+function write_configuration($networkname, $config) {
+	global $dir;
+	
+	// save the configuration
+	$fh = fopen($dir . "data/" . $networkname . ".xml", 'w') or die("Can't write to the data file.");
+	fwrite($fh, $config);
+	fclose($fh);
+
+	// clear the checkinID
+	$fh = fopen($dir . "data/cid/" . $networkname . ".txt", 'w') or die("Can't write to the data file.");
+	fwrite($fh, "-\n");
+	fclose($fh);
+}
+
+
 function show_config() {
 	$fc = file_get_contents($dir . "data/" . $_SESSION['user'] . ".xml");	
 	print $fc;
 }
 
-function store_config() {
 
-	//$uploadfile = $uploaddir . basename($_FILES['userfile']['name']);
+function store_config() {
 	$uploadfile = $dir . "data/" . $_SESSION['user'] . ".xml";
 
 	// TODO: Verify remote file has newer version that local file
@@ -44,6 +61,11 @@ function store_config() {
 	} else {
 		echo "Possible file upload attack!\n";
 	}
+
+	// clear the checkinID
+	$fh = fopen($dir . "data/cid/" . $_SESSION['user'] . ".txt", 'w') or die("Can't write to the data file.");
+	fwrite($fh, "-\n");
+	fclose($fh);
 
 }
 
@@ -91,7 +113,6 @@ function do_login($xmlp, $network) {
 }
 
 
-
 function pull_config($xmlp, $network) {
 
 	do_login($xmlp, $network);
@@ -123,7 +144,37 @@ function pull_config($xmlp, $network) {
 
 }
 
-function push_config($xmlp) {
+function push_config($xmlp, $network) {
+	
+	global $dir;
+	
+	// Figre out server url for checkin
+	$serverurl = $xmlp->robindash->configsync;
+	if (stripos($xmlp->robindash->configsync, "http") === false) {
+		$serverurl = "http://" . $xmlp->robindash->configsync . '/sync-config.php?action=store';
+	}
+
+	// Do the POST
+	$post_data = array();
+	$post_data['conffile'] = "@" .$dir . "data/" . $networkname . ".xml";
+	
+	$ckfile = $dir . "data/" . $network . "_cookies.txt";
+	$ch = curl_init($loginurl);
+	
+	curl_setopt($ch, CURLOPT_POST, 1);
+	curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+	curl_setopt($ch, CURLOPT_COOKIEFILE, $ckfile);
+	curl_setopt($ch, CURLOPT_COOKIEJAR, $ckfile);
+	curl_setopt($ch, CURLOPT_COOKIESESSION, 1);
+	//curl_setopt($ch, CURLOPT_HEADER, 1);
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+	$postResult = curl_exec($ch);
+	if (curl_errno($ch)) {
+		die("# unable to upload file! " . curl_errno($ch));
+	}
+	curl_close($ch);
 
 }
 
@@ -139,6 +190,11 @@ $xmlp = simplexml_load_file($dir . "data/" . $network . ".xml");
 
 switch ($_GET["action"]) {
 
+	/**
+	 * First two cases are for the root dashboard. It makes no decisions,
+	 * it only does what the remote dashboards tell it to: display the current config
+	 * or store a new config.
+	 */
 	case "show":
 		auth_user($xmlp);
 		show_config();
@@ -147,10 +203,28 @@ switch ($_GET["action"]) {
 		auth_user($xmlp);
 		store_config();
 		break;
+	/**
+	 * This case runs on the remote dashboard. The remote dashboard decides which
+	 * configuraiton is newer and will either send the new one to the root dashboar
+	 * or write the configuration from the root dashboard locally.
+	 */
 	case "dosync":
+
 		verify_localhost($xmlp);
 		$remoteconfig = pull_config($xmlp, $network);
-		print $remoteconfig;
+
+		$remotexml = simplexml_load_string($remoteconfig);
+
+		$remotever = intval($remotexml->robindash->configversion);
+		$localver = intval($xmlp->robindash->configversion);
+
+		if ($localver > $remotever) {
+			push_config($xmlp, $network);
+		} else if ($localver < $remotever) {
+			write_configuration($network, $remoteconfig);			
+		} else {
+			// Same configuration so no changes!
+		}
 		/* if remote new, sync local, if local new push */
 		break;
 	default:

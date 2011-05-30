@@ -10,6 +10,8 @@
 <forwardcheck>0</forwardcheck>
 <location>-40,175</location>
 <configsync></configsync>
+<configversion>1</configversion>
+<configdate>20110530115023PST</configdate>
 
 <firewall>
 <http_authenticated>1</http_authenticated>

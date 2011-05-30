@@ -25,6 +25,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
+function save_configuration($xmlp, $networkname, $config) {
+	global $dir;
+
+	// bump the version and the date
+	$config = str_replace("<configversion>" . $xmlp->robindash->configversion . "</configversion>", 
+				"<configversion>" . (intval($xmlp->robindash->configversion) + 1) . "</configversion>", $config);
+	$config = str_replace("<configdate>" . $xmlp->robindash->configdate . "</configdate>", 
+				"<configdate>" . date('YmdHisT') . "</configdate>", $config);
+
+	// save the configuration
+	$fh = fopen($dir . "data/" . $networkname . ".xml", 'w') or die("Can't write to the data file.");
+	fwrite($fh, $config);
+	fclose($fh);
+
+	// clear the checkinID
+	$fh = fopen($dir . "data/cid/" . $networkname . ".txt", 'w') or die("Can't write to the data file.");
+	fwrite($fh, "-\n");
+	fclose($fh);
+
+	return $config;
+}
+
 $networkname = $_SESSION['user'];
 
 if(isset($_GET['page'])) {$page = strtolower($_GET['page']);}
@@ -113,6 +135,7 @@ $fc = str_replace("<editmode>" . $xmlp->robindash->editmode . "</editmode>", "<e
 $fc = str_replace("<enable_gmt_offset>" . $xmlp->management->enable_gmt_offset . "</enable_gmt_offset>", "<enable_gmt_offset>" . $_POST['timezone'] . "</enable_gmt_offset>", $fc);
 $fc = str_replace("<enable_country_code>" . $xmlp->management->enable_country_code . "</enable_country_code>", "<enable_country_code>" . $_POST['enable_country_code'] . "</enable_country_code>", $fc);
 $fc = str_replace("<forwardcheck>" . $xmlp->robindash->forwardcheck . "</forwardcheck>", "<forwardcheck>" . $forwardcheck . "</forwardcheck>", $fc);
+$fc = str_replace("<configsync>" . $xmlp->robindash->configsync . "</configsync>", "<configsync>" . $_POST['configsync'] . "</configsync>", $fc);
 
 if(strlen($xmlp->robindash->location) > 0 && $_POST['location'] == "Already Set") {echo "";}
 else if(strlen($xmlp->robindash->location) > 0 && isset($_POST['location'])) {
@@ -139,13 +162,7 @@ $fh = fopen($dir . "data/" . $networkname . "_notes.txt", 'w') or die("Can't wri
 fwrite($fh, $_POST['networknotes']);
 fclose($fh);
 
-$fh = fopen($dir . "data/" . $networkname . ".xml", 'w') or die("Can't write to the data file.");
-fwrite($fh, $fc);
-fclose($fh);
-
-$fh = fopen($dir . "data/cid/" . $_SESSION['user'] . ".txt", 'w') or die("Can't write to the data file.");
-fwrite($fh, "-\n");
-fclose($fh);
+$fc = save_configuration($xmlp, $networkname, $fc);
 
 if(!$_SERVER['HTTP_REFERER']) {echo "response({\"status\" : \"ok\"})";exit;}
 else {$status = "done";}
@@ -253,13 +270,7 @@ else {$transparentbridge = 0;}
 $fc = str_replace("<enable_transparent_bridge>" . $xmlp->management->enable_transparent_bridge . "</enable_transparent_bridge>", "<enable_transparent_bridge>" . $transparentbridge . "</enable_transparent_bridge>", $fc);
 
 
-$fh = fopen($dir . "data/" . $networkname . ".xml", 'w') or die("Can't write to the data file.");
-fwrite($fh, $fc);
-fclose($fh);
-
-$fh = fopen($dir . "data/cid/" . $_SESSION['user'] . ".txt", 'w') or die("Can't write to the data file.");
-fwrite($fh, "-\n");
-fclose($fh);
+$fc = save_configuration($xmlp, $networkname, $fc);
 
 if(!$_SERVER['HTTP_REFERER']) {echo "response({\"status\" : \"ok\"})";exit;}
 else {$status = "done";}
@@ -288,13 +299,7 @@ else {$privatebridge = 0;}
 
 $fc = str_replace("<filter_AP1_bridge>" . $xmlp->iprules->filter_AP1_bridge . "</filter_AP1_bridge>", "<filter_AP1_bridge>" . $privatebridge . "</filter_AP1_bridge>", $fc);
 
-$fh = fopen("data/" . $networkname . ".xml", 'w') or die("Can't write to the data file.");
-fwrite($fh, $fc);
-fclose($fh);
-
-$fh = fopen($dir . "data/cid/" . $_SESSION['user'] . ".txt", 'w') or die("Can't write to the data file.");
-fwrite($fh, "-\n");
-fclose($fh);
+$fc = save_configuration($xmlp, $networkname, $fc);
 
 if(!$_SERVER['HTTP_REFERER']) {echo "response({\"status\" : \"ok\"})";exit;}
 else {$status = "done";}
@@ -312,13 +317,7 @@ $fc = str_replace("<channel_alternate>" . $xmlp->radio->channel_alternate . "</c
 $fc = str_replace("<priv_rate>" . $xmlp->madwifi->priv_rate . "</priv_rate>", "<priv_rate>" . $radiorate . "</priv_rate>", $fc);
 $fc = str_replace("<priv_distance>" . $xmlp->madwifi->priv_distance . "</priv_distance>", "<priv_distance>" . $_POST['priv_distance'] . "</priv_distance>", $fc);
 
-$fh = fopen($dir . "data/" . $networkname . ".xml", 'w') or die("Can't write to the data file.");
-fwrite($fh, $fc);
-fclose($fh);
-
-$fh = fopen($dir . "data/cid/" . $_SESSION['user'] . ".txt", 'w') or die("Can't write to the data file.");
-fwrite($fh, "-\n");
-fclose($fh);
+$fc = save_configuration($xmlp, $networkname, $fc);
 
 if(!$_SERVER['HTTP_REFERER']) {echo "response({\"status\" : \"ok\"})";exit;}
 else {$status = "done";}
@@ -347,13 +346,7 @@ $fc = str_replace("<filter_AP1_bridge>" . $xmlp->iprules->filter_AP1_bridge . "<
 if(move_uploaded_file($_FILES['keybasedssh']['tmp_name'], $dir . "data/uploads/" . $networkname . "/ssh.key") && $_FILES['keybasedssh']['size'] < 512)  {echo "";}
 else {echo "";}
 
-$fh = fopen($dir . "data/" . $networkname . ".xml", 'w') or die("Can't write to the data file.");
-fwrite($fh, $fc);
-fclose($fh);
-
-$fh = fopen($dir . "data/cid/" . $_SESSION['user'] . ".txt", 'w') or die("Can't write to the data file.");
-fwrite($fh, "-\n");
-fclose($fh);
+$fc = save_configuration($xmlp, $networkname, $fc);
 
 if(!$_SERVER['HTTP_REFERER']) {echo "response({\"status\" : \"ok\"})";exit;}
 else {$status = "done";}
@@ -396,13 +389,7 @@ if(strlen($_FILES['file']['name']) > 0 && $_FILES['file']['size'] < 5120000) {
 else if(strlen($_FILES['file']['name']) > 0) {echo "<script>alert('Your firmware file was too large to be uploaded!');</script>";}
 else {echo "";}
 
-$fh = fopen($dir . "data/" . $networkname . ".xml", 'w') or die("Can't write to the data file.");
-fwrite($fh, $fc);
-fclose($fh);
-
-$fh = fopen($dir . "data/cid/" . $_SESSION['user'] . ".txt", 'w') or die("Can't write to the data file.");
-fwrite($fh, "-\n");
-fclose($fh);
+$fc = save_configuration($xmlp, $networkname, $fc);
 
 if(!$_SERVER['HTTP_REFERER']) {echo "response({\"status\" : \"ok\"})";exit;}
 else {$status = "done";}
@@ -502,20 +489,12 @@ $fc = str_replace("<pomade_enabled>" . $xmlp->secondary->pomade_enabled . "</pom
 $fc = str_replace("<pomade_privatecfg>" . $xmlp->secondary->pomade_privatecfg . "</pomade_privatecfg>", "<pomade_privatecfg>" . $privatecfg . "</pomade_privatecfg>", $fc);
 $fc = str_replace("<pomade_errorhandling>" . $xmlp->secondary->pomade_errorhandling . "</pomade_errorhandling>", "<pomade_errorhandling>" . $errorhandling . "</pomade_errorhandling>", $fc);
 
-
-$fh = fopen($dir . "data/" . $networkname . ".xml", 'w') or die("Can't write to the data file.");
-fwrite($fh, $fc);
-fclose($fh);
-
-$fh = fopen($dir . "data/cid/" . $_SESSION['user'] . ".txt", 'w') or die("Can't write to the data file.");
-fwrite($fh, "-\n");
-fclose($fh);
+$fc = save_configuration($xmlp, $networkname, $fc);
 
 if(!$_SERVER['HTTP_REFERER']) {echo "response({\"status\" : \"ok\"})";exit;}
 else {$status = "done";}
-}
+} else {echo "";}
 
-else {echo "";}
 
 if(isset($_GET['action']) && $_GET['action'] == "delete-sshkey" && file_exists($dir . "data/uploads/" . $networkname . "/ssh.key")) {
 	unlink($dir . "data/uploads/" . $networkname . "/ssh.key");
@@ -951,6 +930,14 @@ else {*/echo "<br>";//}
 		
 		<tr><td colspan=\"3\"><hr></td></tr>
 		
+		<tr>
+		<td id=\"name\">Remote Config Sync</td>
+		<td id=\"data\"><input type=\"text\" name=\"configsync\" value=\"" . $xmlp->robindash->configsync . "\"></td>
+		<td id=\"desc\">Sync configuration with this root dashboard (must enable configsync.sh cron script!)</td>
+		</tr>		
+
+		<tr><td colspan=\"3\"><hr></td></tr>
+				
 		<tr>
 		<td id=\"name\">Delete Account</td>
 		<td id=\"data\"><input type=\"button\" value=\"Delete My Account\" style=\"margin-left:10%;width:80%;\" onclick=\"check_delete();\"></td>
