@@ -568,11 +568,13 @@ else {*/echo "<br>";//}
 
 		if($page == "general") {echo "<form action=\"" . $wdir . "edit.php?page=general\" method=\"POST\">
 		<table>
+		<!--
 		<tr>
 		<td id=\"name\">Make a Donation</td>
 		<td id=\"data\"><input type=\"button\" value=\"Donate via. PayPal\" style=\"margin-bottom:0%;margin-left:10%;width:80%;\" onclick=\"window.location = '" . $wdir . "donate.php';\"></td>
 		<td id=\"desc\"><b>Help support the robin-dash project.</b><br>Your donation helps with development &amp; hosting costs.</td>
 		</tr>
+		-->
 		
 		<tr><td colspan=\"3\"><hr></td></tr>
 		

@@ -71,7 +71,7 @@ function sendreport($errno, $errstr) {
 		else {
 			echo "<b>Error:</b> [" . $errno . "] " . $errstr . "<br />";
 			echo "An error report has been seen to the developers of robin-dash.<br />";
-			mail("bug-reports@robin-dash.com", "Bug Report", $errno . "\n" . $errstr . "\n" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);
+//			mail("bug-reports@robin-dash.com", "Bug Report", $errno . "\n" . $errstr . "\n" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);
 		}
 
 	$errored = 1;
