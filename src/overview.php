@@ -581,20 +581,20 @@ function initialize() {
 
 	if ($dh = opendir($dir . "data/stats/" . $networkname . "/")) {
 		while (($file = readdir($dh)) !== false) {
-			if($file == "." || $file == ".." || is_dir($file) || strpos($file, '-') !==FALSE || strpos($file, '.ip.') !==FALSE || strpos($file, '.date.') !==FALSE) {echo "";}
-			else {
+			if (strpos($file, ".txt") !== FALSE && !(strpos($file, '.ip.') !==FALSE || strpos($file, '.date.') !==FALSE)) {
 				// We have our data..
 				
 				$data = explode("&", file_get_contents($dir . "data/stats/" . $networkname . "/" . $file));
 				$nodes = "";
 				$rssi = "";
 				
-				$this_mac = base64_decode(str_replace(".txt", "", $file));
-				$this_mac = explode(":", $this_mac);
-				$this_mac[5] = dechex(hexdec($this_mac[5])-1);
-				$this_mac = implode(":", $this_mac);
-				$this_mac = base64_encode(strtoupper($this_mac));
-				
+				//$this_mac = base64_decode(str_replace(".txt", "", $file));
+				//$this_mac = explode(":", $this_mac);
+				//$this_mac[5] = dechex(hexdec($this_mac[5])-1);
+				//$this_mac = implode(":", $this_mac);
+				//$this_mac = base64_encode(strtoupper($this_mac));
+				$this_mac = str_replace(".txt", "", $file);				
+
 				foreach($data as $dataitem) {
 					if(strpos($dataitem, 'nodes=') !==FALSE) {$nodes = str_replace("nodes=", "", $dataitem);}
 					else if(strpos($dataitem, 'rssi=') !==FALSE) {$rssi = str_replace("rssi=", "", $dataitem);}
