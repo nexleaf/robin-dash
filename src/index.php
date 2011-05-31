@@ -154,10 +154,13 @@ if($has_https == "true" && !$_SERVER['HTTPS']) {header("Location: https://" . $s
 			<label for="pass"><b><?php echo $_LANG['password']; ?></b></label>
 			<input type="password" id="pass" name="pass" value="" style="width:95%;" />
 			
-			<input type="submit" name="submit" value="<?php echo $_LANG['login']; ?>" class="btn-login" style="width:60%;margin-right:2%;" /><input type="submit" name="submit" value="Register" class="btn-login" style="width:20%;" />
+			<input type="submit" name="submit" value="<?php echo $_LANG['login']; ?>" class="btn-login" style="width:60%;margin-right:2%;" />
+			<!-- <input type="submit" name="submit" value="Register" class="btn-login" style="width:20%;" /> -->
 		</form>
 		<hr style="margin-top:0%;" />
+		<!--
 		<p style="text-align:left;margin-top:-2%;margin-bottom:2%;"><?php echo $_LANG['demo_intro']; ?><br /><strong><a href="<?php echo $wdir; ?>?action=demo-user"><?php echo $_LANG['demo_link']; ?></a></strong><p style="text-align:right;margin-top:<?php if(strpos($_SERVER['HTTP_USER_AGENT'], 'WebKit') !==FALSE) {echo "-14";} else {echo "-15.5";} ?>%;margin-bottom:-7%;"><?php echo $_LANG['forgot_intro']; ?><br /><strong><a href="<?php echo $wdir; ?>reset-password.php" onclick="Modalbox.show('reset-password.php?type=modal', {width: 460, title: 'Forgot Password'}); return false;" title="Reset Password"><?php echo $_LANG['forgot_link']; ?></a></strong></p></p>
+	-->
 	</div>
 </div>
 
