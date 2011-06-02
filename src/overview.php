@@ -335,7 +335,7 @@ else {die("<h1>This node has not checked in yet!</h1>");}
 $data = explode("&", $fc);
 $nodes = explode(";", $data[1]);
 $rssi = explode(";", $data[2]);
-$ping = round($data[3], 0);
+$ping = $data[3];
 
 if($ping > 10) {$color = "red";}
 else if($ping > 6) {$color = "orange";}
@@ -411,7 +411,7 @@ $data = implode(",", $online);
 			</table>
 		
 			<h2>Neighbors</h2>
-
+			
 			<table style="width:100%;" class="sortable">
 			<thead>
 				<tr>
@@ -423,16 +423,22 @@ $data = implode(",", $online);
 			</thead>
 			<tbody>
 			<?php
+			$idxcnt = 0;
 			foreach($nodes as $node_data) {
-				if(strlen($nodes[$i]) == 0 && strlen($rssi[$i]) == 0) {echo "";}
+				$i = $idxcnt;
+				if (strlen($node_data) == 0) { 
+					$idxcnt += 1;
+					continue; 
+				}
 				else {
 					foreach($xmlp->node as $node) {
 						$norm_ip = $node->ip;
 						
-						$ubnt_ip_array = explode(".", $node->ip);
-						$ubnt_ip_array[1] = $ubnt_ip_array[1] + 1;
-						$ubnt_ip = implode(".", $ubnt_ip_array);
-						
+						//$ubnt_ip_array = explode(".", $node->ip);
+						//$ubnt_ip_array[1] = $ubnt_ip_array[1] + 1;
+						//$ubnt_ip = implode(".", $ubnt_ip_array);
+						$ubnt_ip = $node->ip;
+
 						if($norm_ip == $node_data) {
 							$name = $node->name;
 							$mac = $node->mac;
@@ -471,6 +477,7 @@ $data = implode(",", $online);
 					$mac = "";
 					$color = "";
 				}
+				$idxcnt += 1;
 			}
 			?>
 			</tbody>
@@ -871,11 +878,13 @@ exit;
 					<th><?php echo $_LANG['users']; ?></th>
 					<th><?php echo $_LANG['usage']; ?><br />&darr;/&uarr; <small>(<?php echo $_LANG['mb']; ?>)</small></th>
 					<th><?php echo $_LANG['uptime']; ?></th>
-					<th><?php echo $_LANG['txrate']; ?></th>
+					<th><?php echo $_LANG['txrate']; ?><br /><?php echo $_LANG['rtt']; ?></th>
 					<th><?php echo $_LANG['version']; ?></th>
 					<th><?php echo $_LANG['load']; ?><br /><?php echo $_LANG['memfree']; ?></th>
 					<th><?php echo $_LANG['gatewayip']; ?><br /><?php echo $_LANG['ping']; ?></th>
+					<th><?php echo $_LANG['route']; ?></th>
 					<th><?php echo $_LANG['hops']; ?></th>
+					<th><?php echo $_LANG['neigh']; ?><br /><?php echo $_LANG['rssi']; ?></th>
 				</tr>
 			</thead>
 			<tbody>
@@ -915,15 +924,18 @@ exit;
 				else if(strpos($item, 'memfree=') !==FALSE) {$memfree = str_replace("memfree=", "", $item);}
 				else if(strpos($item, 'gateway=') !==FALSE) {$gateway = str_replace("gateway=", "", $item);}
 				else if(strpos($item, 'hops=') !==FALSE) {$hops = str_replace("hops=", "", $item);}
+				else if(strpos($item, 'nodes=') !==FALSE) {$nodes = str_replace("nodes=", "", $item);}
+				else if(strpos($item, 'rssi=') !==FALSE) {$rssi = str_replace("rssi=", "", $item);}
 				else if(strpos($item, 'RTT=') !==FALSE) {$rtt = str_replace("RTT=", "", $item);}
+				else if(strpos($item, 'routes=') !==FALSE) {$route = str_replace("routes=", "", $item);}
 				else {echo "";}
 			}
+			
+			//if(isset($load)) {$expload = explode(",", $load);}	// expload is not a typo, rather a note to self
+			//else {exit;}
 
-			if(isset($load)) {$expload = explode(",", $load);}	// expload is not a typo, rather a note to self
-			else {exit;}
-
-			$nums = $expload[0] + $expload[1] + $expload[2];
-			$load = round($nums / 3, 2);
+			//$nums = $expload[0] + $expload[1] + $expload[2];
+			//$load = round($nums / 3, 2);
 
 			$xmlp = simplexml_load_file($dir . "data/" . $networkname . "_nodes.xml");
 
@@ -948,6 +960,9 @@ exit;
 				$uptime = "<font color=\"red\"><b>Down!</b></font><br />" . $fulldatetime->format('Y/m/d') . "<br />" . $fulldatetime->format('H:i e');
 			}
 			
+			$nodes = explode(";", $nodes);
+			$rssi = explode(";", $rssi);
+			
 			echo "<tr style=\"border:1px gray solid;font-size:80%;\">";
 			echo "<td class=\"" . $statusid ."\">" . $status . "</td>";
 
@@ -961,11 +976,20 @@ exit;
 			echo "<td>" . $users . "</td>";
 			echo "<td>" . $kbdown . "<br />" . $kbup . "</td>";
 			echo "<td>" . $uptime . "</td>";
-			echo "<td>" . $ntr . "</td>";
+			echo "<td>" . $ntr . "<br />" . $rtt . "</td>";
 			echo "<td>" . $robin . "<br />" . $batman . "</td>";
 			echo "<td>" . $load . "<br />" . $memfree . "</td>";
 			echo "<td>" . $gateway . "</td>";
+			echo "<td>" . $route . "</td>";
 			echo "<td>" . $hops . "</td>";
+			echo "<td>";
+			for ($i = 0; $i < sizeof($node); $i++ ) {
+				if (strlen($nodes[$i]) == 0) {
+					continue;
+				}
+				echo $nodes[$i] . " : " . $rssi[$i] . "<br />";
+			}
+			echo "</td>";
 			echo "</tr>\n";
 
 			$array[19] == null;

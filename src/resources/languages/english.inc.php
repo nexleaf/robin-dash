@@ -51,6 +51,9 @@ $_LANG['memfree'] = "memfree";
 $_LANG['gatewayip'] = "gateway ip";
 $_LANG['ping'] = "ping";
 $_LANG['hops'] = "hops";
+$_LANG['route'] = "route";
+$_LANG['rtt'] = "RTT";
+$_LANG['neigh'] = "Neighbors";
 
 $_LANG['clients_list'] = "Clients List";
 $_LANG['clients'] = "Clients";
