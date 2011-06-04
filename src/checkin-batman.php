@@ -89,6 +89,12 @@ $fk = fopen($dir . "data/stats/" . $networkname . "/" . date('Ymd') . "/" . date
 fwrite($fk, $_GET['users'] . "&" . urlencode($_GET['top_users']) . "&" . $_GET['sta_mac'] . "&" . $_GET['sta_ip'] . "&" . $_GET['sta_hostname'] . "&" . $_GET['sta_rssi'] . "&" . $_GET['sta_dbm']);
 fclose($fk);
 
+// Accumulate all the checkins per node
+$fk = fopen($dir . "data/stats/" . $networkname . "/" . date('Ymd') . "/" . base64_encode($_GET['mac']) . ".allcheckins.txt", 'a') or die("# Cant write node statistics");
+fwrite($fk, $_SERVER['QUERY_STRING'] + "\n");
+fclose($fk);
+
+// Save the current stats
 $fk = fopen($dir . "data/stats/" . $networkname . "/" . date('Ymd') . "/" . base64_encode($_GET['mac']) . ".txt", 'w') or die("# Cant write node statistics");
 fwrite($fk, $_GET['NTR'] . "&" . $_GET['nbs'] . "&" . $_GET['rssi'] . "&" . $_GET['RTT']);
 fclose($fk);
