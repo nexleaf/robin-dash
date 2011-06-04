@@ -28,6 +28,18 @@ if(file_exists("settings.php")) {require("settings.php");}
 else {header("Location: oobe.php");exit;}
 
 
+function parse_query_sting($qstr) {
+  $res = array();
+  $ands = explode('&', $qstr);
+  foreach($ands as $elm) {
+    $kvp = explode('=', $elm);
+    if (sizeof($kvp >= 2)) {
+      $res[$kvp[0]] = $kvp[1];
+    }
+  }
+  return $res;
+}
+
 if(isset($_GET['id']) && file_exists($dir . "data/" . $_GET['id'] . ".xml")) {$networkname = $_GET['id'];$loggedin = "false";}
 else {
 	if($_SESSION['user'] && $_SESSION['pass'] && file_exists($dir . "data/" . $_SESSION['user'] . ".xml")) {
@@ -321,6 +333,28 @@ foreach($xmlp->node as $node) {
 	if($node->mac == $_GET['mac']) {$name = $node->name;}
 }
 
+$nowdate = date_create();
+$yesterday = $nowdate->sub(date_interval_create_from_date_string('1 day'))
+
+$allcheckindata = array();
+
+if (file_exists($dir . "data/stats/" . $networkname . "/" . $yesterday->format('Ymd') . "/" . base64_encode($_GET['mac']) . "allcheckins.txt")) {
+  $lines = file($dir . "data/stats/" . $networkname . "/" . $yesterday->format('Ymd') . "/" . base64_encode($_GET['mac']) . "allcheckins.txt");
+  foreach($lines as $qstr) {
+    $qres = parse_query_string($qstr);
+    $allcheckindata[$qres['datetime']] = $qres;
+  }
+
+}
+if (file_exists($dir . "data/stats/" . $networkname . "/" . $nowdate->format('Ymd') . "/" . base64_encode($_GET['mac']) . "allcheckins.txt")) {
+  $lines = file($dir . "data/stats/" . $networkname . "/" . $nowdate->format('Ymd') . "/" . base64_encode($_GET['mac']) . "allcheckins.txt");
+  foreach($lines as $qstr) {
+    $qres = parse_query_string($qstr);
+    $allcheckindata[$qres['datetime']] = $qres;
+  }
+}
+
+$ksort($allcheckindata);
 
 $file = $sdir . base64_encode($_GET['mac']) . ".txt";
 $i = "0";
