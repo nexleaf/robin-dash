@@ -91,7 +91,8 @@ fclose($fk);
 
 // Accumulate all the checkins per node
 $fk = fopen($dir . "data/stats/" . $networkname . "/" . date('Ymd') . "/" . base64_encode($_GET['mac']) . ".allcheckins.txt", 'a') or die("# Cant write node statistics");
-fwrite($fk, $_SERVER['QUERY_STRING'] + "\n");
+fwrite($fk, $_SERVER['QUERY_STRING']);
+fwrite($fk, "\n");
 fclose($fk);
 
 // Save the current stats
