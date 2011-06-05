@@ -334,7 +334,7 @@ foreach($xmlp->node as $node) {
 }
 
 $nowdate = date_create();
-$yesterday = $nowdate->sub(date_interval_create_from_date_string('1 day'))
+$yesterday = $nowdate->sub(date_interval_create_from_date_string('1 day'));
 
 $allcheckindata = array();
 
@@ -354,7 +354,7 @@ if (file_exists($dir . "data/stats/" . $networkname . "/" . $nowdate->format('Ym
   }
 }
 
-$ksort($allcheckindata);
+ksort($allcheckindata);
 
 $file = $sdir . base64_encode($_GET['mac']) . ".txt";
 $i = "0";

@@ -93,7 +93,7 @@ $algar = md5($_GET['ip'] . md5(file_get_contents($dir . "data/" . $networkname .
 
 // Save node stats
 $fj = fopen($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['mac']) . ".txt", 'w') or die("# Cant write node statistics");
-fwrite($fj, $_SERVER['QUERY_STRING']);
+fwrite($fj, $_SERVER['QUERY_STRING'] . '&datetime=' . urlencode($robin_vars['datetime']);
 fclose($fj);
 
 // Save node time stats if it is later than last checkin
@@ -128,7 +128,8 @@ fclose($fk);
 
 // Accumulate all the checkins per node
 $fk = fopen($dir . "data/stats/" . $networkname . "/" . date('Ymd', $checkindate) . "/" . base64_encode($_GET['mac']) . ".allcheckins.txt", 'a') or die("# Cant write node statistics");
-fwrite($fk, $_SERVER['QUERY_STRING'] + "\n");
+fwrite($fk, $_SERVER['QUERY_STRING'] . '&datetime=' . urlencode($robin_vars['datetime']);
+fwrite($fk, "\n");
 fclose($fk);
 
 // Save the current stats
