@@ -128,7 +128,7 @@ fclose($fk);
 
 // Accumulate all the checkins per node
 $fk = fopen($dir . "data/stats/" . $networkname . "/" . date('Ymd', $checkindate) . "/" . base64_encode($_GET['mac']) . ".allcheckins.txt", 'a') or die("# Cant write node statistics");
-fwrite($fk, $_SERVER['QUERY_STRING'] . '&datetime=' . urlencode($robin_vars['datetime']);
+fwrite($fk, $_SERVER['QUERY_STRING'] . '&datetime=' . urlencode($robin_vars['datetime']));
 fwrite($fk, "\n");
 fclose($fk);
 
