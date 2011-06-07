@@ -28,18 +28,6 @@ if(file_exists("settings.php")) {require("settings.php");}
 else {header("Location: oobe.php");exit;}
 
 
-function parse_query_sting($qstr) {
-  $res = array();
-  $ands = explode('&', $qstr);
-  foreach($ands as $elm) {
-    $kvp = explode('=', $elm);
-    if (sizeof($kvp >= 2)) {
-      $res[$kvp[0]] = $kvp[1];
-    }
-  }
-  return $res;
-}
-
 if(isset($_GET['id']) && file_exists($dir . "data/" . $_GET['id'] . ".xml")) {$networkname = $_GET['id'];$loggedin = "false";}
 else {
 	if($_SESSION['user'] && $_SESSION['pass'] && file_exists($dir . "data/" . $_SESSION['user'] . ".xml")) {
@@ -333,28 +321,7 @@ foreach($xmlp->node as $node) {
 	if($node->mac == $_GET['mac']) {$name = $node->name;}
 }
 
-$nowdate = date_create();
-$yesterday = $nowdate->sub(date_interval_create_from_date_string('1 day'));
 
-$allcheckindata = array();
-
-if (file_exists($dir . "data/stats/" . $networkname . "/" . $yesterday->format('Ymd') . "/" . base64_encode($_GET['mac']) . "allcheckins.txt")) {
-  $lines = file($dir . "data/stats/" . $networkname . "/" . $yesterday->format('Ymd') . "/" . base64_encode($_GET['mac']) . "allcheckins.txt");
-  foreach($lines as $qstr) {
-    $qres = parse_query_string($qstr);
-    $allcheckindata[$qres['datetime']] = $qres;
-  }
-
-}
-if (file_exists($dir . "data/stats/" . $networkname . "/" . $nowdate->format('Ymd') . "/" . base64_encode($_GET['mac']) . "allcheckins.txt")) {
-  $lines = file($dir . "data/stats/" . $networkname . "/" . $nowdate->format('Ymd') . "/" . base64_encode($_GET['mac']) . "allcheckins.txt");
-  foreach($lines as $qstr) {
-    $qres = parse_query_string($qstr);
-    $allcheckindata[$qres['datetime']] = $qres;
-  }
-}
-
-ksort($allcheckindata);
 
 $file = $sdir . base64_encode($_GET['mac']) . ".txt";
 $i = "0";
@@ -400,6 +367,9 @@ if($isp[$i - 2] == "co" || $isp[$i - 2] == "com") {$isp = ucfirst($isp[$i - 3]);
 else {$isp = ucfirst($isp[$i - 2]);}
 
 $data = implode(",", $online);
+
+$chartstr = "?network=" . $networkname . "&type=rssi&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
+
 ?>
 
 <html>
@@ -407,7 +377,66 @@ $data = implode(",", $online);
 <title><? echo $_LANG['node_info'] . ": " . $brand; ?></title>
 <link rel="stylesheet" type="text/css" href="<?php echo $wdir; ?>resources/style.css" />
 <link rel="shortcut icon" href="<?php echo $wdir; ?>resources/favicon.ico"/>
-<script src="<?php echo $wdir; ?>resources/sorttable.js"></script>
+<!-- <script src="<?php echo $wdir; ?>resources/sorttable.js"></script> -->
+<script src="<?php echo $wdir; ?>resources/js/jquery-1.6.1.min.js" type="text/javascript"></script>
+<script src="<?php echo $wdir; ?>resources/js/highcharts.js" type="text/javascript"></script>
+<script type="text/javascript">
+var chart; // global
+/**
+ * Request data from the server, add it to the graph and set a timeout to request again
+ */
+ function requestData(event) {
+   $.ajax({
+         url: 'overview-plot.php<?php echo $chartstr; ?>',
+         success: function (items) {
+	 for (var i = 0; i < items.length; i++) {
+	   chart.addSeries(items[i]);
+	   chart.xAxis.tickInterval = 3600 * 1000;
+	 }
+       },
+         cache: false,
+         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
+     });
+ }
+
+$(document).ready(function() {
+    chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chart-rssi',
+            defaultSeriesType: 'spline',
+            events: {
+                load: requestData
+	      }
+        },
+      title: {
+         text: 'RSSI'
+      },
+      subtitle: {
+         text: 'RSSI'
+      },
+      xAxis: {
+         type: 'datetime',
+         tickInterval:  3600 * 1000,
+         tickWidth: 1,
+         gridLineWidth: 1,
+         labels: {
+            align: 'left',
+            x: 3,
+            y: -3 
+         }
+      },
+      yAxis: {
+         title: {
+            text: 'RSSI'
+         },
+	    min: 0,
+	    max: 50,
+      },
+      series: []
+          });
+                  });
+
+</script>
 </head>
 <body>
 <div id="wrapper">
@@ -516,6 +545,8 @@ $data = implode(",", $online);
 			?>
 			</tbody>
 			</table>
+			<br />
+			<div id="chart-rssi" style="height: 480px; width: 100%"></div>
 			<br />
 			<input type="button" style="font-weight:bold;width:100%;" onclick="window.close();" name="sent" value="Close Window" />
 		</div>
