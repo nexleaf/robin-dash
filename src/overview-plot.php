@@ -39,7 +39,7 @@ function get_rssi($network, $station, $date, $data) {
       $datestr = $thedate->format('D, d M Y H:i:s'); // 'Date(' . $thedate->format('Y, m, d, H, i, s') . ')';
       // Date(year, month, day, hours, minutes, seconds, milliseconds); Date.UTC(1971,  3,  6)
       //$res[$nodes[$i]]['data'][] = array($datestr, trim($rssis[$i]));
-      $res[$nodes[$i]]['data'][] = array($datestr, trim($rssis[$i]));
+      $res[$nodes[$i]]['data'][] = array($datestr, intval(trim($rssis[$i])));
     }
   }
 

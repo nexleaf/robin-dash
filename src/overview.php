@@ -347,10 +347,8 @@ $online = array(0=>0,1=>0,2=>0,3=>0,4=>0,5=>0,6=>0,7=>0,8=>0,9=>0,10=>0,11=>0,12
 if($handle = opendir($dir . "data/stats/" . $networkname . "/" . $year . $mon . $day . "/")) {
 	while(false !== ($file = readdir($handle))) {
 		if($file != "." && $file != ".." && strpos($file, '.usage.') !==FALSE && strpos($file, base64_encode($_GET['mac'])) !==FALSE) {
-			if(strpos(substr($file, 2, 2), '-') !==FALSE) {$hour = substr($file, 2, 1);}
-			else {$hour = substr($file, 2, 2);}
-
-			$online[$hour] = 100;
+		  $hour = intval(substr($file, 0, 2));
+		  $online[$hour] = 100;
 		}
 	}
 
@@ -404,6 +402,7 @@ $(document).ready(function() {
         chart: {
             renderTo: 'chart-rssi',
             defaultSeriesType: 'spline',
+	    zoomType: 'x',
             events: {
                 load: requestData
 	      }
@@ -412,18 +411,19 @@ $(document).ready(function() {
          text: 'RSSI'
       },
       subtitle: {
-         text: 'RSSI'
+         text: 'From Yesterday 0:00 AM to now'
       },
       xAxis: {
          type: 'datetime',
          tickInterval:  3600 * 1000,
-         tickWidth: 1,
-         gridLineWidth: 1,
-         labels: {
-            align: 'left',
-            x: 3,
-            y: -3 
-         }
+	    labels: {
+            enabled: true,
+            formatter: function() {
+                return Highcharts.dateFormat('%b %d %H:%M', this.value);
+            },
+            rotation: -90,
+            align: 'right'
+        }
       },
       yAxis: {
          title: {
