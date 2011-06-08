@@ -20,9 +20,48 @@ function parse_query_string($qstr) {
 }
 
 
+function get_single_param($data, $param)
+{
+  $res = array(0=>array());
+  $res[0]['name'] = $param;
+  $res[0]['data'] = array();
+  foreach($data as $checkin) {
+    if ($checkin[$param] == "") {
+      continue;
+    }
+    $val = intval(trim($checkin[$param]));
+    $thedate = date_create_from_format('YmdHisT', trim($checkin['datetime']));
+    $datestr = $thedate->format('D, d M Y H:i:s'); 
+    $res[0]['data'][] = array($datestr, $val);
+  }
+  return $res;
+}
 
 
-function get_rssi($network, $station, $date, $data) {
+function get_txrate($data) {
+  
+  $res = array(0=>array());
+  $res[0]['name'] = "TX Rate";
+  $res[0]['data'] = array();
+  foreach($data as $checkin) {
+    if ($checkin['NTR'] == "") {
+      continue;
+    }
+    $ratearr = explode('-', trim($checkin['NTR']));
+    $txrate = intval($ratearr[0]);
+    if ($ratearr[1] == "MB/s") {
+      $txrate = $txrate * 1024;
+    }
+    $thedate = date_create_from_format('YmdHisT', trim($checkin['datetime']));
+    $datestr = $thedate->format('D, d M Y H:i:s'); 
+    $res[0]['data'][] = array($datestr, $txrate);
+  }
+  return $res;
+
+}
+
+
+function get_rssi($data) {
 
   $res = array();
   
@@ -108,7 +147,22 @@ switch ($_GET["type"]) {
 
  case "rssi":
 
-   $ret = get_rssi($network, $station, $date, $allcheckindata);
+   $ret = get_rssi($allcheckindata);
+   break;
+
+ case "txrate":
+
+   $ret = get_txrate($allcheckindata);
+   break;
+
+ case "rtt":
+   
+   $ret = get_single_param($allcheckindata, "RTT");
+   break;
+
+ case "hops":
+   
+   $ret = get_single_param($allcheckindata, "hops");
    break;
 
  default:

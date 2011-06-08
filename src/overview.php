@@ -366,7 +366,10 @@ else {$isp = ucfirst($isp[$i - 2]);}
 
 $data = implode(",", $online);
 
-$chartstr = "?network=" . $networkname . "&type=rssi&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
+$chartrssi = "?network=" . $networkname . "&type=rssi&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
+$charttxrate = "?network=" . $networkname . "&type=txrate&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
+$chartrtt = "?network=" . $networkname . "&type=rtt&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
+$charthops = "?network=" . $networkname . "&type=hops&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
 
 ?>
 
@@ -379,17 +382,22 @@ $chartstr = "?network=" . $networkname . "&type=rssi&station=" . $_GET['mac'] . 
 <script src="<?php echo $wdir; ?>resources/js/jquery-1.6.1.min.js" type="text/javascript"></script>
 <script src="<?php echo $wdir; ?>resources/js/highcharts.js" type="text/javascript"></script>
 <script type="text/javascript">
-var chart; // global
+
+var chartrssi; // global
+var charttxrate; // global
+var chartrtt; // global
+var charthops; // global
+
 /**
  * Request data from the server, add it to the graph and set a timeout to request again
  */
- function requestData(event) {
+ function requestDataRssi(event) {
    $.ajax({
-         url: 'overview-plot.php<?php echo $chartstr; ?>',
+         url: 'overview-plot.php<?php echo $chartrssi; ?>',
          success: function (items) {
 	 for (var i = 0; i < items.length; i++) {
-	   chart.addSeries(items[i]);
-	   chart.xAxis.tickInterval = 3600 * 1000;
+	   chartrssi.addSeries(items[i]);
+	   chartrssi.xAxis.tickInterval = 3600 * 1000;
 	 }
        },
          cache: false,
@@ -397,14 +405,85 @@ var chart; // global
      });
  }
 
+ function requestDataTXRate(event) {
+   $.ajax({
+         url: 'overview-plot.php<?php echo $charttxrate; ?>',
+         success: function (items) {
+	 for (var i = 0; i < items.length; i++) {
+	   charttxrate.addSeries(items[i]);
+	   charttxrate.xAxis.tickInterval = 3600 * 1000;
+	 }
+       },
+         cache: false,
+         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
+     });
+ }
+
+ function requestDataRTT(event) {
+   $.ajax({
+         url: 'overview-plot.php<?php echo $chartrtt; ?>',
+         success: function (items) {
+	 for (var i = 0; i < items.length; i++) {
+	   chartrtt.addSeries(items[i]);
+	   chartrtt.xAxis.tickInterval = 3600 * 1000;
+	 }
+       },
+         cache: false,
+         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
+     });
+ }
+
+ function requestDataHops(event) {
+   $.ajax({
+         url: 'overview-plot.php<?php echo $charthops; ?>',
+         success: function (items) {
+	 for (var i = 0; i < items.length; i++) {
+	   charthops.addSeries(items[i]);
+	   charthops.xAxis.tickInterval = 3600 * 1000;
+	 }
+       },
+         cache: false,
+         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
+     });
+ }
+
+ function plot_single_var(LrenderTo, Lloadfunc, Ltitletext, Lsubtitletext, LyAxistext) {
+   thechart = new Highcharts.Chart({
+        chart: {
+            renderTo: LrenderTo,
+            defaultSeriesType: 'spline',
+	    zoomType: 'x',
+            events: {
+	       load: Lloadfunc
+	    }
+        },
+      title: {
+         text: Ltitletext
+      },
+      subtitle: {
+         text: Lsubtitletext
+      },
+      xAxis: {
+         type: 'datetime',
+      },
+      yAxis: {
+         title: {
+            text: LyAxistext
+         },
+      },
+      series: []
+	 });
+   return thechart;
+ }
+
 $(document).ready(function() {
-    chart = new Highcharts.Chart({
+    chartrssi = new Highcharts.Chart({
         chart: {
             renderTo: 'chart-rssi',
             defaultSeriesType: 'spline',
 	    zoomType: 'x',
             events: {
-                load: requestData
+                load: requestDataRssi
 	      }
         },
       title: {
@@ -434,7 +513,14 @@ $(document).ready(function() {
       },
       series: []
           });
-                  });
+
+    charttxrate =  plot_single_var('chart-txrate', requestDataTXRate, 'Estimated TX Rate to Gateway', 'From Yesterday 0:00 AM to now', 'KB/s');
+
+    chartrtt =  plot_single_var('chart-rtt', requestDataRTT, 'Estimated RTT', 'From Yesterday 0:00 AM to now', 'RTT');
+
+    charthops = plot_single_var('chart-hops', requestDataHops, 'Hops to Gateway', 'From Yesterday 0:00 AM to now', 'Hops');
+
+});
 
 </script>
 </head>
@@ -539,7 +625,13 @@ $(document).ready(function() {
 			</tbody>
 			</table>
 			<br />
+			<div id="chart-txrate" style="height: 240px; width: 100%"></div>
+			<br />
+			<div id="chart-rtt" style="height: 240px; width: 100%"></div>
+			<br />
 			<div id="chart-rssi" style="height: 480px; width: 100%"></div>
+			<br />
+			<div id="chart-hops" style="height: 240px; width: 100%"></div>
 			<br />
 			<input type="button" style="font-weight:bold;width:100%;" onclick="window.close();" name="sent" value="Close Window" />
 		</div>
@@ -1018,7 +1110,7 @@ exit;
 
 			if(file_exists($dir . "data/stats/" . $networkname . "/" . date('Ymd') . "/" . base64_encode($mac) . ".txt")) {
 				if($statusid == "offline") {echo "<td style=\"text-align:left;padding:10px;\">" . $name . "</td>";}
-				else {echo "<td style=\"text-align:left;padding:10px;\"><a href=\"#\" onclick=\"window.open('" . $wdir . "overview.php?id=" . $networkname . "&action=node-info&mac=" . $mac . "', '" . rand(1, 9999999) . "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=1,width=630,height=512');\">" . $name . "</a></td>";}
+				else {echo "<td style=\"text-align:left;padding:10px;\"><a href=\"#\" onclick=\"window.open('" . $wdir . "overview.php?id=" . $networkname . "&action=node-info&mac=" . $mac . "', '" . rand(1, 9999999) . "', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=0,resizable=1,width=800,height=800');\">" . $name . "</a></td>";}
 			}
 			else {echo "<td style=\"text-align:left;padding:10px;\">" . $name . "</td>";}
 
