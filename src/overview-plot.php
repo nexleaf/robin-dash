@@ -60,25 +60,24 @@ function get_txrate($data) {
 
 }
 
-
-function get_rssi($data) {
+function get_name_val_pair($data, $name, $val) {
 
   $res = array();
   
   foreach($data as $checkin) {
-    $nodes = explode(';', $checkin['nodes']);
-    $rssis = explode(';', $checkin['rssi']);
+    $nodes = explode(';', $checkin[$name]);
+    $vals = explode(';', $checkin[$val]);
     for ($i = 0; $i < sizeof($nodes); $i++) {
+      if ($nodes[$i] == "") {
+	continue;
+      }
       if (!isset($checkin['datetime'])) {
 	continue;
       }
       $res[$nodes[$i]]['name'] = $nodes[$i];
-      //print $checkin['datetime'] . "<br>";
       $thedate = date_create_from_format('YmdHisT', trim($checkin['datetime']));
-      $datestr = $thedate->format('D, d M Y H:i:s'); // 'Date(' . $thedate->format('Y, m, d, H, i, s') . ')';
-      // Date(year, month, day, hours, minutes, seconds, milliseconds); Date.UTC(1971,  3,  6)
-      //$res[$nodes[$i]]['data'][] = array($datestr, trim($rssis[$i]));
-      $res[$nodes[$i]]['data'][] = array($datestr, intval(trim($rssis[$i])));
+      $datestr = $thedate->format('D, d M Y H:i:s'); 
+      $res[$nodes[$i]]['data'][] = array($datestr, intval(trim($vals[$i])));
     }
   }
 
@@ -89,8 +88,11 @@ function get_rssi($data) {
     $count += 1;
   }
   return $retobj;
-}
 
+
+
+
+}
 
 
 
@@ -147,7 +149,7 @@ switch ($_GET["type"]) {
 
  case "rssi":
 
-   $ret = get_rssi($allcheckindata);
+   $ret = get_name_val_pair($allcheckindata, "nodes", "rssi");
    break;
 
  case "txrate":
@@ -164,6 +166,10 @@ switch ($_GET["type"]) {
    
    $ret = get_single_param($allcheckindata, "hops");
    break;
+
+ case "rank":
+   
+   $ret = get_name_val_pair($allcheckindata, "nbs", "rank");
 
  default:
 
