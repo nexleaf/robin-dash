@@ -369,6 +369,7 @@ $data = implode(",", $online);
 $chartrssi = "?network=" . $networkname . "&type=rssi&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
 $charttxrate = "?network=" . $networkname . "&type=txrate&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
 $chartrtt = "?network=" . $networkname . "&type=rtt&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
+$chartrank = "?network=" . $networkname . "&type=rank&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
 $charthops = "?network=" . $networkname . "&type=hops&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
 
 ?>
@@ -386,6 +387,7 @@ $charthops = "?network=" . $networkname . "&type=hops&station=" . $_GET['mac'] .
 var chartrssi; // global
 var charttxrate; // global
 var chartrtt; // global
+var chartrank; // global
 var charthops; // global
 
 /**
@@ -433,6 +435,20 @@ var charthops; // global
      });
  }
 
+ function requestDataRank(event) {
+   $.ajax({
+         url: 'overview-plot.php<?php echo $chartrank; ?>',
+         success: function (items) {
+	 for (var i = 0; i < items.length; i++) {
+	   chartrank.addSeries(items[i]);
+	   chartrank.xAxis.tickInterval = 3600 * 1000;
+	 }
+       },
+         cache: false,
+         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
+     });
+ }
+
  function requestDataHops(event) {
    $.ajax({
          url: 'overview-plot.php<?php echo $charthops; ?>',
@@ -447,11 +463,11 @@ var charthops; // global
      });
  }
 
- function plot_single_var(LrenderTo, Lloadfunc, Ltitletext, Lsubtitletext, LyAxistext) {
+  function plot_single_var(LrenderTo, Lloadfunc, Ltitletext, Lsubtitletext, LyAxistext) {
    thechart = new Highcharts.Chart({
         chart: {
             renderTo: LrenderTo,
-            defaultSeriesType: 'spline',
+            defaultSeriesType: 'line',
 	    zoomType: 'x',
             events: {
 	       load: Lloadfunc
@@ -476,21 +492,21 @@ var charthops; // global
    return thechart;
  }
 
-$(document).ready(function() {
-    chartrssi = new Highcharts.Chart({
+ function plot_double_var(LrenderTo, Lloadfunc, Ltitletext, Lsubtitletext, LyAxistext) {
+   thechart = new Highcharts.Chart({
         chart: {
-            renderTo: 'chart-rssi',
-            defaultSeriesType: 'spline',
+            renderTo: LrenderTo,
+            defaultSeriesType: 'line',
 	    zoomType: 'x',
             events: {
-                load: requestDataRssi
-	      }
+	       load: Lloadfunc
+	    }
         },
       title: {
-         text: 'RSSI'
+         text: Ltitletext
       },
       subtitle: {
-         text: 'From Yesterday 0:00 AM to now'
+         text: Lsubtitletext
       },
       xAxis: {
          type: 'datetime',
@@ -506,13 +522,19 @@ $(document).ready(function() {
       },
       yAxis: {
          title: {
-            text: 'RSSI'
+            text: LyAxistext
          },
-	    min: 0,
-	    max: 50,
       },
       series: []
-          });
+	 });
+   return thechart;
+
+ }
+
+$(document).ready(function() {
+    chartrssi = plot_double_var('chart-rssi', requestDataRssi, 'RSSI', 'From Yesterday 0:00 AM to now','RSSI');  
+
+    chartrank = plot_double_var('chart-rank', requestDataRank, 'Rank', 'From Yesterday 0:00 AM to now', 'Rank');
 
     charttxrate =  plot_single_var('chart-txrate', requestDataTXRate, 'Estimated TX Rate to Gateway', 'From Yesterday 0:00 AM to now', 'KB/s');
 
@@ -630,6 +652,8 @@ $(document).ready(function() {
 			<div id="chart-rtt" style="height: 240px; width: 100%"></div>
 			<br />
 			<div id="chart-rssi" style="height: 480px; width: 100%"></div>
+			<br />
+			<div id="chart-rank" style="height: 480px; width: 100%"></div>
 			<br />
 			<div id="chart-hops" style="height: 240px; width: 100%"></div>
 			<br />
