@@ -371,6 +371,7 @@ $charttxrate = "?network=" . $networkname . "&type=txrate&station=" . $_GET['mac
 $chartrtt = "?network=" . $networkname . "&type=rtt&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
 $chartrank = "?network=" . $networkname . "&type=rank&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
 $charthops = "?network=" . $networkname . "&type=hops&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
+$chartgwqual = "?network=" . $networkname . "&type=gw-qual&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
 
 ?>
 
@@ -389,6 +390,7 @@ var charttxrate; // global
 var chartrtt; // global
 var chartrank; // global
 var charthops; // global
+ var chartgwqual; // global
 
 /**
  * Request data from the server, add it to the graph and set a timeout to request again
@@ -456,6 +458,20 @@ var charthops; // global
 	 for (var i = 0; i < items.length; i++) {
 	   charthops.addSeries(items[i]);
 	   charthops.xAxis.tickInterval = 3600 * 1000;
+	 }
+       },
+         cache: false,
+         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
+     });
+ }
+
+ function requestDataGWQual(event) {
+   $.ajax({
+         url: 'overview-plot.php<?php echo $chartgwqual; ?>',
+         success: function (items) {
+	 for (var i = 0; i < items.length; i++) {
+	   chartgwqual.addSeries(items[i]);
+	   chartgwqual.xAxis.tickInterval = 3600 * 1000;
 	 }
        },
          cache: false,
@@ -541,6 +557,10 @@ $(document).ready(function() {
     chartrtt =  plot_single_var('chart-rtt', requestDataRTT, 'Estimated RTT', 'From Yesterday 0:00 AM to now', 'RTT');
 
     charthops = plot_single_var('chart-hops', requestDataHops, 'Hops to Gateway', 'From Yesterday 0:00 AM to now', 'Hops');
+
+    chartgwqual = plot_single_var('chart-gw-qual', requestDataGWQual, 'Gateway Quality', 'From Yesterday 0:00 AM to now', 'GW Qual');
+
+
 
 });
 
@@ -663,6 +683,8 @@ $(document).ready(function() {
 			<div id="chart-rank" style="height: 480px; width: 100%"></div>
 			<br />
 			<div id="chart-hops" style="height: 240px; width: 100%"></div>
+			<br />
+			<div id="chart-gw-qual" style="height: 240px; width: 100%"></div>
 			<br />
 			<input type="button" style="font-weight:bold;width:100%;" onclick="window.close();" name="sent" value="Close Window" />
 		</div>

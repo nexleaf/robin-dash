@@ -170,6 +170,12 @@ switch ($_GET["type"]) {
  case "rank":
    
    $ret = get_name_val_pair($allcheckindata, "nbs", "rank");
+   break;
+
+ case "gw-qual":
+   
+   $ret = get_single_param($allcheckindata, "gw-qual");
+   break;
 
  default:
 
