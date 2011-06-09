@@ -31,7 +31,8 @@ function get_single_param($data, $param)
     }
     $val = intval(trim($checkin[$param]));
     $thedate = date_create_from_format('YmdHisT', trim($checkin['datetime']));
-    $datestr = $thedate->format('D, d M Y H:i:s'); 
+    //$datestr = $thedate->format('D, d M Y H:i:s'); 
+    $datestr = intval($thedate->format('U')) * 1000;
     $res[0]['data'][] = array($datestr, $val);
   }
   return $res;
@@ -53,7 +54,8 @@ function get_txrate($data) {
       $txrate = $txrate * 1024;
     }
     $thedate = date_create_from_format('YmdHisT', trim($checkin['datetime']));
-    $datestr = $thedate->format('D, d M Y H:i:s'); 
+    //$datestr = $thedate->format('D, d M Y H:i:s'); 
+    $datestr = intval($thedate->format('U')) * 1000;
     $res[0]['data'][] = array($datestr, $txrate);
   }
   return $res;
@@ -76,7 +78,8 @@ function get_name_val_pair($data, $name, $val) {
       }
       $res[$nodes[$i]]['name'] = $nodes[$i];
       $thedate = date_create_from_format('YmdHisT', trim($checkin['datetime']));
-      $datestr = $thedate->format('D, d M Y H:i:s'); 
+      //$datestr = $thedate->format('D, d M Y H:i:s'); 
+      $datestr = intval($thedate->format('U')) * 1000;
       $res[$nodes[$i]]['data'][] = array($datestr, intval(trim($vals[$i])));
     }
   }

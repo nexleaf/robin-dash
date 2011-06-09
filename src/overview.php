@@ -261,7 +261,7 @@ include($dir . "resources/ouilookup.php");
 									$clientmac = $data[3];
 									$vendor = ouilookup($clientmac);
 									
-									if(strlen($vendor) < 2) {mail("bug-reports@robin-dash.com", "Bug Report", "The vendor for the MAC address: " . $clientmac . " could not be identified.\n" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);}
+									//if(strlen($vendor) < 2) {mail("bug-reports@robin-dash.com", "Bug Report", "The vendor for the MAC address: " . $clientmac . " could not be identified.\n" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);}
 									
 									echo "<tr style=\"border:1px gray solid;\">\n";
 									echo "<td style=\"text-align:left;\">" . $clientname . "<br>" . $clientmac . "</td>\n";
@@ -390,104 +390,35 @@ var charttxrate; // global
 var chartrtt; // global
 var chartrank; // global
 var charthops; // global
- var chartgwqual; // global
+var chartgwqual; // global
 
-/**
- * Request data from the server, add it to the graph and set a timeout to request again
- */
- function requestDataRssi(event) {
-   $.ajax({
-         url: 'overview-plot.php<?php echo $chartrssi; ?>',
-         success: function (items) {
-	 for (var i = 0; i < items.length; i++) {
-	   chartrssi.addSeries(items[i]);
-	   chartrssi.xAxis.tickInterval = 3600 * 1000;
-	 }
-       },
-         cache: false,
-         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
-     });
- }
+Highcharts.setOptions({
+	global: {
+		useUTC: false
+	}
+});
 
- function requestDataTXRate(event) {
-   $.ajax({
-         url: 'overview-plot.php<?php echo $charttxrate; ?>',
-         success: function (items) {
-	 for (var i = 0; i < items.length; i++) {
-	   charttxrate.addSeries(items[i]);
-	   charttxrate.xAxis.tickInterval = 3600 * 1000;
-	 }
-       },
-         cache: false,
-         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
-     });
- }
-
- function requestDataRTT(event) {
-   $.ajax({
-         url: 'overview-plot.php<?php echo $chartrtt; ?>',
-         success: function (items) {
-	 for (var i = 0; i < items.length; i++) {
-	   chartrtt.addSeries(items[i]);
-	   chartrtt.xAxis.tickInterval = 3600 * 1000;
-	 }
-       },
-         cache: false,
-         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
-     });
- }
-
- function requestDataRank(event) {
-   $.ajax({
-         url: 'overview-plot.php<?php echo $chartrank; ?>',
-         success: function (items) {
-	 for (var i = 0; i < items.length; i++) {
-	   chartrank.addSeries(items[i]);
-	   chartrank.xAxis.tickInterval = 3600 * 1000;
-	 }
-       },
-         cache: false,
-         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
-     });
- }
-
- function requestDataHops(event) {
-   $.ajax({
-         url: 'overview-plot.php<?php echo $charthops; ?>',
-         success: function (items) {
-	 for (var i = 0; i < items.length; i++) {
-	   charthops.addSeries(items[i]);
-	   charthops.xAxis.tickInterval = 3600 * 1000;
-	 }
-       },
-         cache: false,
-         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
-     });
- }
-
- function requestDataGWQual(event) {
-   $.ajax({
-         url: 'overview-plot.php<?php echo $chartgwqual; ?>',
-         success: function (items) {
-	 for (var i = 0; i < items.length; i++) {
-	   chartgwqual.addSeries(items[i]);
-	   chartgwqual.xAxis.tickInterval = 3600 * 1000;
-	 }
-       },
-         cache: false,
-         error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
-     });
- }
-
-  function plot_single_var(LrenderTo, Lloadfunc, Ltitletext, Lsubtitletext, LyAxistext) {
-   thechart = new Highcharts.Chart({
+ function plot_single_var(pullURL, inchart, LrenderTo,  Ltitletext, Lsubtitletext, LyAxistext) {
+   inchart = new Highcharts.Chart({
         chart: {
             renderTo: LrenderTo,
             defaultSeriesType: 'line',
 	    zoomType: 'x',
             events: {
-	       load: Lloadfunc
-	    }
+	       load: function (event) {
+	     $.ajax({
+	       url: pullURL,
+		   success: function (items) {
+		   for (var i = 0; i < items.length; i++) {
+		     inchart.addSeries(items[i]);
+		     inchart.xAxis.tickInterval = 3600 * 1000;
+		   }
+		 },
+		   cache: false,
+		   error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
+	       });
+	   }
+	 }
         },
       title: {
          text: Ltitletext
@@ -505,25 +436,10 @@ var charthops; // global
       },
       series: []
 	 });
-   return thechart;
+   return inchart;
  }
 
- function plot_double_var(LrenderTo, Lloadfunc, Ltitletext, Lsubtitletext, LyAxistext) {
-   thechart = new Highcharts.Chart({
-        chart: {
-            renderTo: LrenderTo,
-            defaultSeriesType: 'line',
-	    zoomType: 'x',
-            events: {
-	       load: Lloadfunc
-	    }
-        },
-      title: {
-         text: Ltitletext
-      },
-      subtitle: {
-         text: Lsubtitletext
-      },
+ /*
       xAxis: {
          type: 'datetime',
          tickInterval:  3600 * 1000,
@@ -535,33 +451,22 @@ var charthops; // global
             rotation: -90,
             align: 'right'
         }
-      },
-      yAxis: {
-         title: {
-            text: LyAxistext
-         },
-      },
-      series: []
-	 });
-   return thechart;
-
- }
+ */
 
 $(document).ready(function() {
-    chartrssi = plot_double_var('chart-rssi', requestDataRssi, 'RSSI', 'From Yesterday 0:00 AM to now','RSSI');  
+		    
+    plot_single_var('overview-plot.php<?php echo $chartrssi; ?>', chartrssi, 'chart-rssi', 'RSSI', 'From Yesterday 0:00 AM to now','RSSI');  
 
-    chartrank = plot_double_var('chart-rank', requestDataRank, 'Rank', 'From Yesterday 0:00 AM to now', 'Rank');
+    plot_single_var('overview-plot.php<?php echo $chartrank; ?>', chartrank, 'chart-rank', 'Rank', 'From Yesterday 0:00 AM to now', 'Rank');
 
-    charttxrate =  plot_single_var('chart-txrate', requestDataTXRate, 'Estimated TX Rate to Gateway', 'From Yesterday 0:00 AM to now', 'KB/s');
+    plot_single_var('overview-plot.php<?php echo $charttxrate; ?>', charttxrate, 'chart-txrate', 'Estimated TX Rate to Gateway', 'From Yesterday 0:00 AM to now', 'KB/s');
 
-    chartrtt =  plot_single_var('chart-rtt', requestDataRTT, 'Estimated RTT', 'From Yesterday 0:00 AM to now', 'RTT');
-
-    charthops = plot_single_var('chart-hops', requestDataHops, 'Hops to Gateway', 'From Yesterday 0:00 AM to now', 'Hops');
-
-    chartgwqual = plot_single_var('chart-gw-qual', requestDataGWQual, 'Gateway Quality', 'From Yesterday 0:00 AM to now', 'GW Qual');
-
-
-
+    plot_single_var('overview-plot.php<?php echo $chartrtt; ?>', chartrtt, 'chart-rtt', 'Estimated RTT', 'From Yesterday 0:00 AM to now', 'RTT');
+		    
+    plot_single_var('overview-plot.php<?php echo $charthops; ?>', charthops, 'chart-hops', 'Hops to Gateway', 'From Yesterday 0:00 AM to now', 'Hops');
+    
+    plot_single_var('overview-plot.php<?php echo $chartgwqual; ?>', chartgwqual, 'chart-gw-qual', 'Gateway Quality', 'From Yesterday 0:00 AM to now', 'GW Qual');
+		    
 });
 
 </script>
