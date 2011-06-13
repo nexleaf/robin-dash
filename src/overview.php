@@ -187,10 +187,103 @@ include($dir . "resources/ouilookup.php");
 <link rel="stylesheet" type="text/css" href="<?php echo $wdir; ?>resources/lightbox/lightbox.css" />
 <link rel="shortcut icon" href="<?php echo $wdir; ?>resources/favicon.ico"/>
 
+<!-- 
 <script type="text/javascript" src="<?php echo $wdir; ?>resources/sorttable.js"></script>
 <script type="text/javascript" src="<?php echo $wdir; ?>resources/lightbox/prototype.js"></script>
 <script type="text/javascript" src="<?php echo $wdir; ?>resources/lightbox/scriptaculous.js?load=effects,builder"></script>
 <script type="text/javascript" src="<?php echo $wdir; ?>resources/lightbox/lightbox.js"></script>
+-->
+<script src="<?php echo $wdir; ?>resources/js/jquery-1.6.1.min.js" type="text/javascript"></script>
+<script src="<?php echo $wdir; ?>resources/js/highcharts.js" type="text/javascript"></script>
+<script type="text/javascript">
+
+    <?php
+	$xml = simplexml_load_file($dir . "data/" . $networkname . "_nodes.xml");
+	foreach($xml->node as $node) {
+	  echo "var chartrssi_" . strtr($node->name, "-", "_") . "; ";
+	  echo "var chartdbm_" . strtr($node->name, "-", "_") . "; ";
+	  echo "var chartstp_" . strtr($node->name, "-", "_") . "; ";	  
+	}
+     ?>
+
+Highcharts.setOptions({
+	global: {
+		useUTC: false
+	}
+});
+
+ function plot_single_var(pullURL, inchart, LrenderTo,  Ltitletext, Lsubtitletext, LyAxistext) {
+   inchart = new Highcharts.Chart({
+        chart: {
+            renderTo: LrenderTo,
+            defaultSeriesType: 'line',
+	    zoomType: 'x',
+            events: {
+	       load: function (event) {
+	     $.ajax({
+	       url: pullURL,
+		   success: function (items) {
+		   for (var i = 0; i < items.length; i++) {
+		     inchart.addSeries(items[i]);
+		     inchart.xAxis.tickInterval = 3600 * 1000;
+		   }
+		 },
+		   cache: false,
+		   error: function (XMLHttpRequest, textStatus, errorThrown) { alert(errorThrown); }
+	       });
+	   }
+	 }
+        },
+      title: {
+         text: Ltitletext
+      },
+      subtitle: {
+         text: Lsubtitletext
+      },
+      xAxis: {
+         type: 'datetime',
+      },
+      yAxis: {
+         title: {
+            text: LyAxistext
+         },
+      },
+      series: []
+	 });
+   return inchart;
+ }
+ 
+  $(document).ready(function() {
+    <?php
+
+			if (isset($_GET['date'])) {
+	      $usedate = $_GET['date'];
+	   } else {
+	     $usedate = date('YmdHisT');
+	   }
+	$xml = simplexml_load_file($dir . "data/" . $networkname . "_nodes.xml");
+	
+	foreach($xml->node as $node) {
+	  $chartvarname = "chartrssi_" . strtr($node->name, "-", "_");
+	  $charturl = "overview-plot.php?network=" . $networkname . "&type=sta_rssi&station=" . $node->mac . "&date=" . $usedate;
+	  echo " plot_single_var('" . $charturl ."', " . $chartvarname . ", '" . $chartvarname . "', 'RSSI', 'From Yesterday 0:00 AM to now','RSSI');";
+
+	  $chartvarname = "chartdbm_" . strtr($node->name, "-", "_");
+	  $charturl = "overview-plot.php?network=" . $networkname . "&type=sta_dbm&station=" . $node->mac . "&date=" . $usedate;
+	  echo " plot_single_var('" . $charturl ."', " . $chartvarname . ", '" . $chartvarname . "', 'dbm', 'From Yesterday 0:00 AM to now','dbm');";
+
+	  $chartvarname = "chartstp_" . strtr($node->name, "-", "_");
+	  $charturl = "overview-plot.php?network=" . $networkname . "&type=sta_stp&station=" . $node->mac . "&date=" . $usedate;
+	  echo " plot_single_var('" . $charturl ."', " . $chartvarname . ", '" . $chartvarname . "', 'stp', 'From Yesterday 0:00 AM to now','stp');";
+	  
+	  
+	}
+     ?>
+	
+	  });
+
+
+</script>
 </head>
 <body>
 <div id="wrapper">
@@ -199,102 +292,42 @@ include($dir . "resources/ouilookup.php");
 	</div>
 	<div id="content">
 		<div id="page-content">
-			<table style="width: 100%;" class="sortable">
-			<thead>
-				<tr>
-					<th><?php echo $_LANG['user_name_mac']; ?></th>
-					<th><?php echo $_LANG['lastseen']; ?></th>
-					<th><?php echo $_LANG['vendor']; ?></th>
-					<th><?php echo $_LANG['rssi']; ?></th>
-					<th><?php echo $_LANG['dbm']; ?></th>
-					<th><?php echo $_LANG['kbdown']; ?></th>
-					<th><?php echo $_LANG['kbup']; ?></th>
-					<th><?php echo $_LANG['status']; ?></th>
-					<th><?php echo $_LANG['graph']; ?></th>
-				</tr>
-			</thead>
-			<tbody>
 
 			<?php
+								  
+          	   $prevdate = date_create_from_format('YmdHisT', $usedate);
+          	   $nextdate = date_create_from_format('YmdHisT', $usedate);
+                        $prevdate->sub(date_interval_create_from_date_string('1 day'));
+                        $nextdate->add(date_interval_create_from_date_string('1 day'));
+
+			echo "<a href='overview.php?id=" . $networkname . "&action=clients&date=" . $prevdate->format('YmdHisT') . "'>&lt;--Prev day</a><br />";
+			echo "NOW == " . date_create_from_format('YmdHisT', $usedate)->format('Y-m-d') . "<br />";
+			echo "<a href='overview.php?id=" . $networkname . "&action=clients&date=" . $nextdate->format('YmdHisT') . "'>&nbsp;&nbsp;&nbsp; Next day --&gt;</a><br />";
+
 			$xml = simplexml_load_file($dir . "data/" . $networkname . "_nodes.xml");
 
 			foreach($xml->node as $node) {
-				if(file_exists($dir . "data/stats/" . $networkname . "/" . base64_encode($node->mac) . ".txt")) {
-					$data = explode("&", file_get_contents($dir . "data/stats/" . $networkname . "/" . base64_encode($node->mac) . ".txt"));
-					sort($data);
-
-					$i = 0;
-					foreach($data as $arrays) {
-						if(strpos($arrays, 'sta_mac=') !==FALSE) {$array_mac = explode(",", str_replace("sta_mac=", "", $arrays));}
-						if(strpos($arrays, 'sta_ip=') !==FALSE) {$array_ip = explode(",", str_replace("sta_ip=", "", $arrays));}
-						if(strpos($arrays, 'sta_hostname=') !==FALSE) {$array_hostname = explode(",", str_replace("sta_hostname=", "", $arrays));}
-						if(strpos($arrays, 'sta_rssi=') !==FALSE) {$array_rssi = explode(",", str_replace("sta_rssi=", "", $arrays));}
-						if(strpos($arrays, 'sta_dbm=') !==FALSE) {$array_dbm = explode(",", str_replace("sta_dbm=", "", $arrays));}
-						
-						$i = $i + 1;
-					}
-					
-					$i = 0;
-					foreach($array_mac as $user) {
-						if($user == "") {echo "";}
-						else {
-							//$extras[$array_mac[$i]]['ip'] = $array_ip[$i];				// Already sent with top_users
-							//$extras[$array_mac[$i]]['hostname'] = $array_hostname[$i];	// Should we show this?
-							$extras[$array_mac[$i]]['rssi'] = $array_rssi[$i];
-							$extras[$array_mac[$i]]['dbm'] = $array_dbm[$i];
-						}
-						
-						$i = $i + 1;
-					}
-					
-					
-					foreach($data as $item) {
-						if(strpos($item, 'top_users=') !==FALSE) {
-							$data = str_replace("top_users=", "", $item);
-							$data = explode("+", $data);
-							
-							foreach($data as $client) {
-								$data = explode(",", $client);
-								
-								if(strlen($data[0]) > 1) {
-									$clientname = $data[4];
-									$clientmac = $data[3];
-									$vendor = ouilookup($clientmac);
-									
-									//if(strlen($vendor) < 2) {mail("bug-reports@robin-dash.com", "Bug Report", "The vendor for the MAC address: " . $clientmac . " could not be identified.\n" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI']);}
-									
-									echo "<tr style=\"border:1px gray solid;\">\n";
-									echo "<td style=\"text-align:left;\">" . $clientname . "<br>" . $clientmac . "</td>\n";
-									echo "<td style=\"text-align:left;\">" . $node->name . "<br />" . $node->mac . "</td>\n";
-									echo "<td style=\"text-align:left;\">" . $vendor . "</td>\n";
-									
-									if($extras[$clientmac]['rssi'] == "") {echo "<td>n/a</td>\n";} else {echo "<td>" . $extras[$clientmac]['rssi'] . "</td>\n";}
-									if($extras[$clientmac]['dbm'] == "") {echo "<td>n/a</td>\n";} else {echo "<td>" . $extras[$clientmac]['dbm'] . "</td>\n";}
-									
-									echo "<td>" . $data[1] . "</td>\n";
-									echo "<td>" . $data[2] . "</td>\n";
-									
-									if(file_exists($dir . "data/stats/" . $networkname . "/banned/" . base64_encode($clientmac) . ".txt")) {echo "<td><a href=\"" . $wdir . "overview.php?id=" . $networkname . "&action=unblock&mac=" . $clientmac . "\">Unblock?</a></td>";}
-									else {echo "<td><a href=\"" . $wdir . "overview.php?id=" . $networkname . "&action=block&mac=" . $clientmac . "\">Block?</a></td>";}
-									
-									echo "<td><a href=\"" . $wdir . "overview.php?id=" . $networkname . "&action=clients&mac=" . $clientmac . "\" rel=\"lightbox[grahps]\">Show</a></td>\n";
-									echo "</tr>\n\n";
-									
-									$hascontent = "true";
-								}
-							}
-						}
-					}
-				}
-			}
-			?>
-
+			  ?>
+			  <table style="width: 100%;">
+			    <thead>
+				<tr>
+			           <th><?php echo $node->name . ' ' . $node->ip . ' ' . $node->mac; ?></th>
+			       </tr>
+			    </thead>
+			    <tbody>
+			    <tr><td>
+			  <?php
+                              echo "<div id='chartrssi_" . strtr($node->name, "-", "_") . "' style='height: 240px; width: 100%'></div><br />";
+                              echo "<div id='chartdbm_" . strtr($node->name, "-", "_") . "' style='height: 240px; width: 100%'></div><br />";
+                              echo "<div id='chartstp_" . strtr($node->name, "-", "_") . "' style='height: 240px; width: 100%'></div><br />";
+			  ?>
+  		           </td></tr>
+									       
 			</tbody>
 			</table>
-			<?php
-			if(!isset($hascontent)) {echo "<br /><br /><center><b>" . $_LANG['error_clients_checkedin'] . "</b></center>";}
-			else {echo "";}
-			?>
+			       <?php } ?>
+			
+		
 			<br />
 			<input type="button" style="font-weight:bold;width:100%;" onclick="window.close();" name="sent" value="<?php echo $_LANG['close_window']; ?>" />
 		</div>
@@ -305,14 +338,24 @@ include($dir . "resources/ouilookup.php");
 </html>
 <?php
 exit;
-}
+ }
 
 
 
 else if(isset($_GET['action']) && $_GET['action'] == "node-info" && isset($_GET['mac']) && file_exists($dir . "data/stats/" . $networkname . "/" . base64_encode($_GET['mac']) . ".ip.txt")) {
-if(isset($_GET['day'])) {$day = $_GET['day'];} else {$day = date('d');}
-if(isset($_GET['mon'])) {$mon = $_GET['mon'];} else {$mon = date('m');}
-if(isset($_GET['year'])) {$year = $_GET['year'];} else {$year = date('Y');}
+
+
+ if (isset($_GET['date'])) {
+   $usedate = $_GET['date'];
+ } else {
+   $usedate = date('YmdHisT');
+ }
+
+ $usedatetimestampe = date_create_from_format('YmdHisT', $usedate)->format('U');
+
+ if(isset($_GET['day'])) {$day = $_GET['day'];} else {$day = date('d', $usedatetimestampe);}
+ if(isset($_GET['mon'])) {$mon = $_GET['mon'];} else {$mon = date('m', $usedatetimestampe);}
+ if(isset($_GET['year'])) {$year = $_GET['year'];} else {$year = date('Y', $usedatetimestampe);}
 
 $xmlp = simplexml_load_file($dir . "data/" . $networkname . "_nodes.xml");
 $sdir = $dir . "data/stats/" . $networkname . "/" . $year . $mon . $day . "/";
@@ -366,12 +409,14 @@ else {$isp = ucfirst($isp[$i - 2]);}
 
 $data = implode(",", $online);
 
-$chartrssi = "?network=" . $networkname . "&type=rssi&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
-$charttxrate = "?network=" . $networkname . "&type=txrate&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
-$chartrtt = "?network=" . $networkname . "&type=rtt&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
-$chartrank = "?network=" . $networkname . "&type=rank&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
-$charthops = "?network=" . $networkname . "&type=hops&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
-$chartgwqual = "?network=" . $networkname . "&type=gw-qual&station=" . $_GET['mac'] . "&date=" . date('YmdHisT');
+
+$chartrssi = "?network=" . $networkname . "&type=rssi&station=" . $_GET['mac'] . "&date=" . $usedate;
+$charttxrate = "?network=" . $networkname . "&type=txrate&station=" . $_GET['mac'] . "&date=" . $usedate;
+$chartrtt = "?network=" . $networkname . "&type=rtt&station=" . $_GET['mac'] . "&date=" . $usedate;
+$chartrank = "?network=" . $networkname . "&type=rank&station=" . $_GET['mac'] . "&date=" . $usedate;
+$charthops = "?network=" . $networkname . "&type=hops&station=" . $_GET['mac'] . "&date=" . $usedate;
+$chartgwqual = "?network=" . $networkname . "&type=gw-qual&station=" . $_GET['mac'] . "&date=" . $usedate;
+$chartkbupdown = "?network=" . $networkname . "&type=kbupdown&station=" . $_GET['mac'] . "&date=" . $usedate;
 
 ?>
 
@@ -391,6 +436,7 @@ var chartrtt; // global
 var chartrank; // global
 var charthops; // global
 var chartgwqual; // global
+var chartkbupdown; //global
 
 Highcharts.setOptions({
 	global: {
@@ -466,6 +512,8 @@ $(document).ready(function() {
     plot_single_var('overview-plot.php<?php echo $charthops; ?>', charthops, 'chart-hops', 'Hops to Gateway', 'From Yesterday 0:00 AM to now', 'Hops');
     
     plot_single_var('overview-plot.php<?php echo $chartgwqual; ?>', chartgwqual, 'chart-gw-qual', 'Gateway Quality', 'From Yesterday 0:00 AM to now', 'GW Qual');
+
+    plot_single_var('overview-plot.php<?php echo $chartkbupdown; ?>', chartkbupdown, 'chart-kbupdown', 'Total Data Transfered', 'From Yesterday 0:00 AM to now', 'kb');
 		    
 });
 
@@ -578,8 +626,25 @@ $(document).ready(function() {
 			?>
 			</tbody>
 			</table>
+<?php
+			if (isset($_GET['date'])) {
+	      $usedate = $_GET['date'];
+	   } else {
+	     $usedate = date('YmdHisT');
+	   }
+          	   $prevdate = date_create_from_format('YmdHisT', $usedate);
+          	   $nextdate = date_create_from_format('YmdHisT', $usedate);
+                        $prevdate->sub(date_interval_create_from_date_string('1 day'));
+                        $nextdate->add(date_interval_create_from_date_string('1 day'));
+			echo "<a href='overview.php?id=" . $networkname . "&action=node-info&mac=" . $_GET['mac'] . "&date=" . $prevdate->format('YmdHisT') . "'>&lt;--Prev day</a><br />";
+			echo "NOW == " . date_create_from_format('YmdHisT', $usedate)->format('Y-m-d') . "<br />";
+			echo "<a href='overview.php?id=" . $networkname . "&action=node-info&mac=" . $_GET['mac'] . "&date=" . $nextdate->format('YmdHisT') . "'>&nbsp;&nbsp;&nbsp; Next day --&gt;</a><br />";
+
+?>
 			<br />
 			<div id="chart-txrate" style="height: 240px; width: 100%"></div>
+			<br />
+			<div id="chart-kbupdown" style="height: 240px; width: 100%"></div>
 			<br />
 			<div id="chart-rtt" style="height: 240px; width: 100%"></div>
 			<br />

@@ -20,22 +20,62 @@ function parse_query_string($qstr) {
 }
 
 
-function get_single_param($data, $param)
+function get_single_param($data, $param, $makefloat)
 {
   $res = array(0=>array());
   $res[0]['name'] = $param;
   $res[0]['data'] = array();
+  $val = 0;
   foreach($data as $checkin) {
     if ($checkin[$param] == "") {
       continue;
     }
-    $val = intval(trim($checkin[$param]));
+    if ($makefloat) {
+      $val = floatval(trim($checkin[$param]));
+    } else {
+      $val = intval(trim($checkin[$param]));
+    }
     $thedate = date_create_from_format('YmdHisT', trim($checkin['datetime']));
     //$datestr = $thedate->format('D, d M Y H:i:s'); 
     $datestr = intval($thedate->format('U')) * 1000;
     $res[0]['data'][] = array($datestr, $val);
   }
   return $res;
+}
+
+function get_dual_param($data, $param1, $param2, $makefloat)
+{
+
+  $res = array();
+  
+  foreach($data as $checkin) {
+    if ($makefloat) {
+      $p1val = floatval($checkin[$param1]);
+      $p2val = floatval($checkin[$param2]);
+    } else {
+      $p1val = intval($checkin[$param1]);
+      $p2val = intval($checkin[$param2]);
+    }
+    if (!isset($checkin['datetime'])) {
+      continue;
+    }
+    $res[$param1]['name'] = $param1;
+    $res[$param2]['name'] = $param2;
+    $thedate = date_create_from_format('YmdHisT', trim($checkin['datetime']));
+    //$datestr = $thedate->format('D, d M Y H:i:s'); 
+    $datestr = intval($thedate->format('U')) * 1000;
+    $res[$param1]['data'][] = array($datestr, $p1val);
+    $res[$param2]['data'][] = array($datestr, $p2val);
+  }
+
+  $retobj = array();
+  $count = 0;
+  foreach ($res as $item) {
+    $retobj[] = $item;
+    $count += 1;
+  }
+  return $retobj;
+
 }
 
 
@@ -49,7 +89,7 @@ function get_txrate($data) {
       continue;
     }
     $ratearr = explode('-', trim($checkin['NTR']));
-    $txrate = intval($ratearr[0]);
+    $txrate = floatval($ratearr[0]);
     if ($ratearr[1] == "MB/s") {
       $txrate = $txrate * 1024;
     }
@@ -62,13 +102,13 @@ function get_txrate($data) {
 
 }
 
-function get_name_val_pair($data, $name, $val) {
+function get_name_val_pair($data, $name, $val, $sep) {
 
   $res = array();
   
   foreach($data as $checkin) {
-    $nodes = explode(';', $checkin[$name]);
-    $vals = explode(';', $checkin[$val]);
+    $nodes = explode($sep, $checkin[$name]);
+    $vals = explode($sep, $checkin[$val]);
     for ($i = 0; $i < sizeof($nodes); $i++) {
       if ($nodes[$i] == "") {
 	continue;
@@ -152,7 +192,7 @@ switch ($_GET["type"]) {
 
  case "rssi":
 
-   $ret = get_name_val_pair($allcheckindata, "nodes", "rssi");
+   $ret = get_name_val_pair($allcheckindata, "nodes", "rssi", ';');
    break;
 
  case "txrate":
@@ -162,23 +202,44 @@ switch ($_GET["type"]) {
 
  case "rtt":
    
-   $ret = get_single_param($allcheckindata, "RTT");
+   $ret = get_single_param($allcheckindata, "RTT", true);
    break;
 
  case "hops":
    
-   $ret = get_single_param($allcheckindata, "hops");
+   $ret = get_single_param($allcheckindata, "hops", false);
    break;
 
  case "rank":
    
-   $ret = get_name_val_pair($allcheckindata, "nbs", "rank");
+   $ret = get_name_val_pair($allcheckindata, "nbs", "rank", ';');
    break;
 
  case "gw-qual":
    
-   $ret = get_single_param($allcheckindata, "gw-qual");
+   $ret = get_single_param($allcheckindata, "gw-qual", false);
    break;
+
+ case "sta_rssi":
+
+   $ret = get_name_val_pair($allcheckindata, "sta_hostname", "sta_rssi", ',');
+   break;
+
+ case "sta_dbm":
+
+   $ret = get_name_val_pair($allcheckindata, "sta_hostname", "sta_dbm", ',');
+   break;
+
+ case "sta_stp":
+
+   $ret = get_name_val_pair($allcheckindata, "sta_hostname", "sta_stp", ',');
+   break;
+
+ case "kbupdown":
+
+   $ret = get_dual_param($allcheckindata, "kbup", "kbdown", true);
+   break;
+   
 
  default:
 
