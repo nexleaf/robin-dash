@@ -1043,7 +1043,7 @@ exit;
 					<th><?php echo $_LANG['ip']; ?><br /><?php echo $_LANG['mac']; ?></th>
 					<th><?php echo $_LANG['users']; ?></th>
 					<th><?php echo $_LANG['usage']; ?><br />&darr;/&uarr; <small>(<?php echo $_LANG['mb']; ?>)</small></th>
-					<th><?php echo $_LANG['uptime']; ?></th>
+					<th><?php echo $_LANG['uptime']; ?><br /><?php echo $_LANG['lastcheckin']; ?></th>
 					<th><?php echo $_LANG['txrate']; ?></th>
 					<th><?php echo $_LANG['version']; ?></th>
 					<th><?php echo $_LANG['load']; ?><br /><?php echo $_LANG['memfree']; ?></th>
@@ -1092,6 +1092,11 @@ exit;
 				else {echo "";}
 			}
 
+			/* get the last checking date */
+			if(file_exists($dir . "data/stats/" . $networkname . "/" . base64_encode($mac) . ".date.txt")) {$fc = file_get_contents($dir . "data/stats/" . $networkname . "/" . base64_encode($mac) . ".date.txt");}
+			else {echo "Node has not checked in yet.";}
+			$lastcheckindatetime = date_create_from_format('YmdHisT', $fc);
+
 			if(isset($load)) {$expload = explode(",", $load);}	// expload is not a typo, rather a note to self
 			else {exit;}
 
@@ -1133,7 +1138,7 @@ exit;
 			echo "<td style=\"text-align:left;\">" . $ip . "<br />" . $mac . "</td>";
 			echo "<td>" . $users . "</td>";
 			echo "<td>" . $kbdown . "<br />" . $kbup . "</td>";
-			echo "<td>" . $uptime . "</td>";
+			echo "<td>" . $uptime . "<br />". $lastcheckindatetime->format('Y/m/d H:i e') . "</td>";
 			echo "<td>" . $ntr . "</td>";
 			echo "<td>" . $robin . "<br />" . $batman . "</td>";
 			echo "<td>" . $load . "<br />" . $memfree . "</td>";
@@ -1153,6 +1158,8 @@ exit;
 			<?php
 			if(!isset($hascontent)) {echo "<br /><br /><center><b>" . $_LANG['error_nodes_checkedin'] . "</b></center>";}
 			else {echo "";}
+			$nowtime = new DateTime();
+			echo "<br /><center>Now: " . $nowtime->format('Y/m/d H:i e') . "</center>";
 			?>
 		</div>
 	</div>
